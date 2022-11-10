@@ -15,16 +15,18 @@ const (
 	KING
 )
 const (
-	WHITE Player = iota
+	NO_PLAYER Player = iota
+	WHITE
 	BLACK
 )
 
 func letterToPlayer(letter rune) Player {
 
-	player := WHITE
-
+	var player Player
 	// black
-	if letter > 96 {
+	if letter > 64 && letter < 91 {
+		player = WHITE
+	} else if letter > 96 && letter < 122 {
 		player = BLACK
 	}
 

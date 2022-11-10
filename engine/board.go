@@ -51,44 +51,6 @@ func (b *Board) PiecesFromName(n PieceName) Bitboard {
 	}
 }
 
-// func (b *Board) WhiteKingIndex() int {
-// 	return BoardConstants.BitToIndex[b.WhiteKing()]
-// }
-
-// func (b *Board) BlackKingIndex() int {
-// 	return BoardConstants.BitToIndex[b.BlackKing()]
-// }
-
-// func (b *Board) WhitePawns() Bitboard {
-// 	return b.WhitePieces & b.Pawns
-// }
-// func (b *Board) BlackPawns() Bitboard {
-// 	return b.BlackPieces & b.Pawns
-// }
-// func (b *Board) WhiteKnights() Bitboard {
-// 	return b.WhitePieces & b.Knights
-// }
-// func (b *Board) BlackKnights() Bitboard {
-// 	return b.BlackPieces & b.Knights
-// }
-// func (b *Board) WhiteBishops() Bitboard {
-// 	return b.WhitePieces & b.Bishops
-// }
-// func (b *Board) BlackBishops() Bitboard {
-// 	return b.BlackPieces & b.Bishops
-// }
-// func (b *Board) WhiteRooks() Bitboard {
-// 	return b.WhitePieces & b.Rooks
-// }
-// func (b *Board) BlackRooks() Bitboard {
-// 	return b.BlackPieces & b.Rooks
-// }
-// func (b *Board) WhiteQueens() Bitboard {
-// 	return b.WhitePieces & b.Queens
-// }
-// func (b *Board) BlackQueens() Bitboard {
-// 	return b.BlackPieces & b.Queens
-// }
 func (b *Board) WhiteKing() Bitboard {
 	return b.PlayerPieces[WHITE] & b.Kings
 }

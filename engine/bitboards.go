@@ -78,17 +78,6 @@ func PrintBitrow(b Bitrow) {
 
 }
 
-// func GetSlidingRowAttackBitboard(row, piece Bitrow, e Engine) Bitrow {
-
-// 	result := e.SlidingBitrow[row][piece]
-
-// 	//1 if result&1 and not result&1&rowKey or pieceKey&1
-// 	// attackFirstSpot := pieceKey&1 | ((result & 1) & ^(result & 1 & rowKey))
-
-// 	// result = (result << 1) | Bitrow(attackFirstSpot)
-// 	return result
-// }
-
 /*
 Bitboard.LSB() -> Bitboard
 

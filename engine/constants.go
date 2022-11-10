@@ -1,5 +1,7 @@
 package engine
 
+const starting_fen string = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
+
 const (
 	EMPTY_BB = Bitboard(0)
 	FULL_BB  = ^EMPTY_BB
