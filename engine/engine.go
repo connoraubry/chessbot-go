@@ -82,5 +82,4 @@ func (e *Engine) LoadSlidingBitrows(filePath string) {
 			e.SlidingBitrow[matchRowBits][Bitrow(1<<index)] = Bitrow(matchResult)
 		}
 	}
-
 }

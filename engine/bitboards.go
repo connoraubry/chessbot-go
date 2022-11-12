@@ -42,6 +42,7 @@ func PrintBitboard(b Bitboard) {
 		}
 		fmt.Println(strings.Join(printSlice, " "))
 	}
+	fmt.Println()
 }
 
 /*
@@ -93,6 +94,28 @@ func (b *Bitboard) PopLSB() Bitboard {
 	return lsb
 }
 
+func (b *Bitboard) ShiftPawns(player Player) {
+	switch player {
+	case WHITE:
+		b.ShiftNorth()
+	case BLACK:
+		b.ShiftSouth()
+	}
+}
+
+func (b *Bitboard) ShiftNorth() {
+	*b = *b << 8
+}
+func (b *Bitboard) ShiftSouth() {
+	*b = *b >> 8
+}
+func (b *Bitboard) ShiftWest() {
+	*b = (*b & (^FILE_A_BB)) >> 1
+}
+func (b *Bitboard) ShiftEast() {
+	*b = (*b & (^FILE_H_BB)) << 1
+}
+
 func (b Bitboard) Index() int {
 	lsb := b.LSB()
 	return BoardConstants.BitToIndex[lsb]
@@ -103,4 +126,133 @@ func (b Bitboard) Rank() int {
 }
 func (b Bitboard) File() int {
 	return b.Index() & 7
+}
+
+func Overlap(b1, b2 Bitboard) bool {
+	overlap := b1 & b2
+	return overlap > 0
+}
+
+func AFileToRank(b Bitboard) Bitboard {
+	b = b & FILE_A_BB
+	for i := 0; i < 7; i++ {
+		b = b | (b >> 7)
+	}
+	return b & RANK_1_BB
+}
+func RankToAFile(b Bitboard) Bitboard {
+	b = b & RANK_1_BB
+	for i := 0; i < 7; i++ {
+		b = b | (b << 7)
+	}
+	return b & FILE_A_BB
+}
+func URDiagonalToRank(b Bitboard) Bitboard {
+	new_bb := (b & FILE_A_BB) |
+		(b&FILE_B_BB)>>RANK_SHIFT_1 |
+		(b&FILE_C_BB)>>RANK_SHIFT_2 |
+		(b&FILE_D_BB)>>RANK_SHIFT_3 |
+		(b&FILE_E_BB)>>RANK_SHIFT_4 |
+		(b&FILE_F_BB)>>RANK_SHIFT_5 |
+		(b&FILE_G_BB)>>RANK_SHIFT_6 |
+		(b&FILE_H_BB)>>RANK_SHIFT_7
+
+	return new_bb
+}
+
+func RankToURDiagonal(b Bitboard) Bitboard {
+	new_bb := (b & FILE_A_BB) |
+		(b&FILE_B_BB)<<RANK_SHIFT_1 |
+		(b&FILE_C_BB)<<RANK_SHIFT_2 |
+		(b&FILE_D_BB)<<RANK_SHIFT_3 |
+		(b&FILE_E_BB)<<RANK_SHIFT_4 |
+		(b&FILE_F_BB)<<RANK_SHIFT_5 |
+		(b&FILE_G_BB)<<RANK_SHIFT_6 |
+		(b&FILE_H_BB)<<RANK_SHIFT_7
+
+	return new_bb
+}
+
+func DRDiagonalToRank(b Bitboard) Bitboard {
+	new_bb := (b & FILE_H_BB) |
+		(b&FILE_G_BB)>>RANK_SHIFT_1 |
+		(b&FILE_F_BB)>>RANK_SHIFT_2 |
+		(b&FILE_E_BB)>>RANK_SHIFT_3 |
+		(b&FILE_D_BB)>>RANK_SHIFT_4 |
+		(b&FILE_C_BB)>>RANK_SHIFT_5 |
+		(b&FILE_B_BB)>>RANK_SHIFT_6 |
+		(b&FILE_A_BB)>>RANK_SHIFT_7
+
+	return new_bb
+}
+
+func RankToDRDiagonal(b Bitboard) Bitboard {
+	new_bb := (b & FILE_H_BB) |
+		(b&FILE_G_BB)<<RANK_SHIFT_1 |
+		(b&FILE_F_BB)<<RANK_SHIFT_2 |
+		(b&FILE_E_BB)<<RANK_SHIFT_3 |
+		(b&FILE_D_BB)<<RANK_SHIFT_4 |
+		(b&FILE_C_BB)<<RANK_SHIFT_5 |
+		(b&FILE_B_BB)<<RANK_SHIFT_6 |
+		(b&FILE_A_BB)<<RANK_SHIFT_7
+
+	return new_bb
+}
+
+func ConvertToURDiagonal(b Bitboard, idx int) Bitboard {
+	rank, file := IndexToRankFile(idx)
+	diag_idx := (rank - file) & 15
+	if diag_idx == 0 {
+		b = b & MAIN_DIAGONAL
+	} else if diag_idx < 8 {
+		b = b >> (RANK_SHIFT_1 * diag_idx)
+		b = b & MAIN_DIAGONAL
+	} else if diag_idx > 8 {
+		b = b << (RANK_SHIFT_1 * (16 - diag_idx))
+		b = b & MAIN_DIAGONAL
+	}
+
+	return b
+}
+func ReverseConvertToURDiagonal(b Bitboard, idx int) Bitboard {
+	rank, file := IndexToRankFile(idx)
+	diag_idx := (rank - file) & 15
+	if diag_idx == 0 {
+		b = b & MAIN_DIAGONAL
+	} else if diag_idx < 8 {
+		b = b & MaskRows[8-diag_idx]
+		b = b << (RANK_SHIFT_1 * diag_idx)
+	} else if diag_idx > 8 {
+		b = b >> (RANK_SHIFT_1 * (16 - diag_idx))
+	}
+	return b
+}
+
+func ConvertToDRDiagonal(b Bitboard, idx int) Bitboard {
+	rank, file := IndexToRankFile(idx)
+	diag_idx := (rank + file) ^ 7
+	if diag_idx == 0 {
+		b = b & DR_DIAGONAL
+	} else if diag_idx < 8 {
+		b = b << (RANK_SHIFT_1 * diag_idx)
+		b = b & DR_DIAGONAL
+	} else if diag_idx > 8 {
+		b = b >> (RANK_SHIFT_1 * (16 - diag_idx))
+		b = b & DR_DIAGONAL
+	}
+	return b
+}
+
+func ReverseConvertToDRDiagonal(b Bitboard, idx int) Bitboard {
+	rank, file := IndexToRankFile(idx)
+	diag_idx := (rank + file) ^ 7
+	if diag_idx == 0 {
+		b = b & DR_DIAGONAL
+	} else if diag_idx < 8 {
+		b = b >> (RANK_SHIFT_1 * diag_idx)
+	} else if diag_idx > 8 {
+		b = b & MaskRows[diag_idx-8]
+		b = b << (RANK_SHIFT_1 * (16 - diag_idx))
+	}
+	return b
 }

@@ -39,7 +39,46 @@ const (
 
 	FILE_LEFT_HALF  = FILE_A_BB | FILE_B_BB | FILE_C_BB | FILE_D_BB
 	FILE_RIGHT_HALF = FILE_E_BB | FILE_F_BB | FILE_G_BB | FILE_H_BB
+
+	MAIN_DIAGONAL = Bitboard(0b1000000001000000001000000001000000001000000001000000001000000001)
+	DR_DIAGONAL   = Bitboard(72624976668147840)
+
+	RANK_SHIFT_1 = 8
+	RANK_SHIFT_2 = RANK_SHIFT_1 + RANK_SHIFT_1
+	RANK_SHIFT_3 = RANK_SHIFT_2 + RANK_SHIFT_1
+	RANK_SHIFT_4 = RANK_SHIFT_3 + RANK_SHIFT_1
+	RANK_SHIFT_5 = RANK_SHIFT_4 + RANK_SHIFT_1
+	RANK_SHIFT_6 = RANK_SHIFT_5 + RANK_SHIFT_1
+	RANK_SHIFT_7 = RANK_SHIFT_6 + RANK_SHIFT_1
 )
+
+var MaskRows = loadMaskRows()
+
+func loadMaskRows() [8]Bitboard {
+	var mr [8]Bitboard
+	mr[0] = 0
+	for i := 1; i < 8; i++ {
+		mr[i] = (mr[i-1] << RANK_SHIFT_1) | RANK_1_BB
+	}
+	return mr
+}
+
+var Promotions = []PieceName{QUEEN, ROOK, BISHOP, KNIGHT}
+
+var StartingPawnRank = map[Player]Bitboard{
+	WHITE: RANK_2_BB,
+	BLACK: RANK_7_BB,
+}
+
+var PawnMoveOffsets = map[Player]int{
+	WHITE: NORTH,
+	BLACK: SOUTH,
+}
+
+var BackRank = map[Player]int{
+	WHITE: 7,
+	BLACK: 0,
+}
 
 type FileRank struct {
 	File int
@@ -77,6 +116,10 @@ func loadConstants() *Constants {
 		i <<= 1
 	}
 	return c
+}
+
+func IndexToRankFile(idx int) (int, int) {
+	return idx >> 3, idx & 7
 }
 
 //Mapping of knight bitboard to valid attack bitboard

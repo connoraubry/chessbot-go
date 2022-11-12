@@ -103,50 +103,6 @@ func TestNewBoardKnights(t *testing.T) {
 	}
 }
 
-// func TestNewBoardQueens(t *testing.T) {
-// 	b := NewBoard(Starting_board_fen_string)
-
-// 	//bitboard is reversed
-// 	expected := Bitboard(0b00001000)
-// 	if b.WhiteQueens() != expected {
-// 		t.Fatalf(`b.WhiteQueens() == %v. Expected %v`, b.WhiteQueens(), expected)
-// 	}
-
-// 	black_expected := expected << (56)
-// 	if b.BlackQueens() != black_expected {
-// 		t.Fatalf(`b.BlackQueens() == %v. Expected %v`, b.BlackQueens(), black_expected)
-// 	}
-// }
-
-// func TestNewBoardKings(t *testing.T) {
-// 	b := NewBoard(Starting_board_fen_string)
-
-// 	//bitboard is reversed
-// 	expected := Bitboard(0b00010000)
-// 	if b.WhiteKing() != expected {
-// 		t.Fatalf(`b.WhiteKing() == %v. Expected %v`, b.WhiteKing(), expected)
-// 	}
-
-// 	black_expected := expected << (56)
-// 	if b.BlackKing() != black_expected {
-// 		t.Fatalf(`b.BlackKing() == %v. Expected %v`, b.BlackKing(), black_expected)
-// 	}
-// }
-
-// func TestNewBoardPawns(t *testing.T) {
-// 	b := NewBoard(Starting_board_fen_string)
-
-// 	expected := Bitboard(0b11111111) << 8
-// 	if b.WhitePawns() != expected {
-// 		t.Fatalf(`b.WhitePawns() == %v. Expected %v`, b.WhitePawns(), expected)
-// 	}
-
-// 	black_expected := expected << (40)
-// 	if b.BlackPawns() != black_expected {
-// 		t.Fatalf(`b.BlackPawns() == %v. Expected %v`, b.BlackPawns(), black_expected)
-// 	}
-// }
-
 func TestMiddleFEN(t *testing.T) {
 
 	b := NewBoard("r1bk1b1r/1p3ppp/5n2/p1P1p3/2B5/4PN2/PP3PPP/R1B1K2R")

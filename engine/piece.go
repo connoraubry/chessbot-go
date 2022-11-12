@@ -20,6 +20,30 @@ const (
 	BLACK
 )
 
+var Enemy = map[Player]Player{
+	WHITE: BLACK,
+	BLACK: WHITE,
+}
+
+func getLetter(name PieceName) rune {
+	var letter rune
+
+	switch name {
+	case KNIGHT:
+		letter = 'N'
+	case BISHOP:
+		letter = 'B'
+	case ROOK:
+		letter = 'R'
+	case QUEEN:
+		letter = 'Q'
+	case KING:
+		letter = 'K'
+	}
+
+	return letter
+}
+
 func letterToPlayer(letter rune) Player {
 
 	var player Player

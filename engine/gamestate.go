@@ -1,9 +1,7 @@
 package engine
 
 import (
-	"fmt"
 	"io/ioutil"
-	"time"
 )
 
 type Castle struct {
@@ -23,15 +21,15 @@ type Gamestate struct {
 }
 
 func NewGamestateFile(filepath string) *Gamestate {
-	start := time.Now()
 	fen := readFENFile(filepath)
+	return NewGamestateFEN(fen)
+}
+
+func NewGamestateFEN(fen string) *Gamestate {
 	gs, err := FenLoader(fen)
-	duration := time.Since(start)
-	fmt.Printf("Execution time: %v\n", duration)
 	if err != nil {
 		panic(err)
 	}
-
 	return gs
 }
 
