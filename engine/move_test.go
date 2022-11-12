@@ -104,6 +104,47 @@ func TestGetQueenMoves(t *testing.T) {
 	}
 }
 
+func TestGetAllCastleMoves(t *testing.T) {
+	gs := NewGamestateFEN("r1bk1b1r/1p3ppp/5n2/p1P1p3/2B5/4PN2/PP3PPP/R1B1K2R w KQ - 1 10")
+
+	expected_length := 1
+	moves := gs.GetAllCastleMoves()
+	if len(moves) != expected_length {
+		t.Fatalf(`Moves != expected. %v != %v`, len(moves), expected_length)
+
+	}
+}
+func TestGetAllCastleMoves2(t *testing.T) {
+	gs := NewGamestateFEN("r1bk1b1r/1p3ppp/5n2/p1P1p3/2B5/4PN2/PP3PPP/R3K2R w KQ - 1 10")
+
+	expected_length := 2
+	moves := gs.GetAllCastleMoves()
+	if len(moves) != expected_length {
+		t.Fatalf(`Moves != expected. %v != %v`, len(moves), expected_length)
+
+	}
+}
+func TestGetAllCastleMoves3(t *testing.T) {
+	gs := NewGamestateFEN("r3kb1r/1p3ppp/5n2/p1P1p3/2B5/4PN2/PP3PPP/R3K2R b KQkq - 1 10")
+
+	expected_length := 1
+	moves := gs.GetAllCastleMoves()
+	if len(moves) != expected_length {
+		t.Fatalf(`Moves != expected. %v != %v`, len(moves), expected_length)
+
+	}
+}
+func TestGetAllCastleMoves4(t *testing.T) {
+	gs := NewGamestateFEN("r1b1k2r/1p3ppp/5n2/p1P1p3/2B5/4PN2/PP3PPP/R3K2R b KQkq - 1 10")
+
+	expected_length := 1
+	moves := gs.GetAllCastleMoves()
+	if len(moves) != expected_length {
+		t.Fatalf(`Moves != expected. %v != %v`, len(moves), expected_length)
+
+	}
+}
+
 func BenchmarkGetPawnMoves(b *testing.B) {
 	var mvs []Move
 	gs := NewGamestateFEN(starting_fen)

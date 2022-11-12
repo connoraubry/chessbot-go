@@ -4,6 +4,16 @@ import (
 	"fmt"
 )
 
+type CastleOpt int
+
+const (
+	NO_CASTLE CastleOpt = iota
+	WHITEOO
+	BLACKOO
+	WHITEOOO
+	BLACKOOO
+)
+
 type Move struct {
 	start int
 	end   int
@@ -14,6 +24,8 @@ type Move struct {
 	capture bool
 
 	promotion PieceName
+
+	castle CastleOpt
 
 	// 	en_passant_revealed   int
 	// 	en_passant_piece_spot int
@@ -70,6 +82,7 @@ func (gs *Gamestate) GetAllMoves() []Move {
 	moves = append(moves, gs.GetAllBishopMoves()...)
 	moves = append(moves, gs.GetAllRookMoves()...)
 	moves = append(moves, gs.GetAllQueenMoves()...)
+	moves = append(moves, gs.GetAllKingMoves()...)
 	return moves
 }
 
@@ -152,6 +165,82 @@ func (gs *Gamestate) GetAllKnightMoves() []Move {
 		moves = append(moves, gs.GetMovesFromMoveBitboard(attack_spots, current_knight, KNIGHT)...)
 
 	}
+	return moves
+}
+func (gs *Gamestate) GetAllKingMoves() []Move {
+	var moves []Move
+
+	king_bb := gs.Board.Kings & gs.Board.PlayerPieces[gs.player]
+	attack_spots := KING_ATTACKS[king_bb] & ^gs.Board.PlayerPieces[gs.player]
+	moves = gs.GetMovesFromMoveBitboard(attack_spots, king_bb, KING)
+
+	moves = append(moves, gs.GetAllCastleMoves()...)
+	return moves
+}
+
+func (gs *Gamestate) GetAllCastleMoves() []Move {
+	var moves []Move
+	var m Move
+	//WOO
+	emptyBoard := gs.Board.EmptySpots()
+
+	if gs.player == WHITE {
+
+		if gs.castle.whiteKing {
+			if emptyBoard&WOO_EMPTY_BOARD == WOO_EMPTY_BOARD {
+				m = Move{
+					start:     4,
+					end:       6,
+					pieceName: KING,
+					player:    gs.player,
+					castle:    WHITEOO,
+				}
+				moves = append(moves, m)
+			}
+		}
+		if gs.castle.whiteQueen {
+			if emptyBoard&WOOO_EMPTY_BOARD == WOOO_EMPTY_BOARD {
+				m = Move{
+					start:     4,
+					end:       2,
+					pieceName: KING,
+					player:    gs.player,
+					castle:    WHITEOOO,
+				}
+				moves = append(moves, m)
+
+			}
+		}
+	}
+
+	if gs.castle.whiteKing {
+		if gs.castle.blackKing {
+			if emptyBoard&BOO_EMPTY_BOARD == BOO_EMPTY_BOARD {
+				m = Move{
+					start:     60,
+					end:       62,
+					pieceName: KING,
+					player:    gs.player,
+					castle:    BLACKOO,
+				}
+				moves = append(moves, m)
+			}
+		}
+		if gs.castle.blackQueen {
+			if emptyBoard&BOOO_EMPTY_BOARD == BOOO_EMPTY_BOARD {
+				m = Move{
+					start:     60,
+					end:       58,
+					pieceName: KING,
+					player:    gs.player,
+					castle:    BLACKOOO,
+				}
+				moves = append(moves, m)
+
+			}
+		}
+	}
+
 	return moves
 }
 
