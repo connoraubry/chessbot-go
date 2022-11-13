@@ -28,6 +28,34 @@ func TestGetPawnOneMoves(t *testing.T) {
 	}
 }
 
+func TestPawnAttack(t *testing.T) {
+	gs := NewGamestateFEN("8/8/6p1/5P2/8/8/8/8 w - - 0 1")
+	moves := gs.GetAllPawnMoves()
+	expected_length_moves := 2
+	if len(moves) != expected_length_moves {
+		t.Fatalf(`len(moves) == %v. Expected %v`, len(moves), expected_length_moves)
+	}
+
+}
+
+func TestPawnAttackAndPromotion(t *testing.T) {
+	gs := NewGamestateFEN("5pp1/5P2/8/8/8/8/8/8 w - - 0 1")
+	moves := gs.GetAllPawnMoves()
+	expected_length_moves := 4
+	if len(moves) != expected_length_moves {
+		t.Fatalf(`len(moves) == %v. Expected %v`, len(moves), expected_length_moves)
+	}
+}
+
+func TestPawnAttackSid(t *testing.T) {
+	gs := NewGamestateFEN("8/p7/6p1/7P/8/8/8/8 w - - 0 1")
+	moves := gs.GetAllPawnAttackMoves()
+	expected_length_moves := 1
+	if len(moves) != expected_length_moves {
+		t.Fatalf(`len(moves) == %v. Expected %v`, len(moves), expected_length_moves)
+	}
+}
+
 func TestGetRookMoves(t *testing.T) {
 	gs := NewGamestateFEN("rnbqkbnr/pppppppp/8/8/8/P7/PPPPPPPP/R3KBNR w KQkq - 0 1")
 	moves := gs.GetAllRookMoves()

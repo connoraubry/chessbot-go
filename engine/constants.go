@@ -69,6 +69,9 @@ func loadMaskRows() [8]Bitboard {
 	return mr
 }
 
+var fileToLetter = []rune{'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'}
+var rankToLetter = []rune{'1', '2', '3', '4', '5', '6', '7', '8'}
+
 var Promotions = []PieceName{QUEEN, ROOK, BISHOP, KNIGHT}
 
 var StartingPawnRank = map[Player]Bitboard{

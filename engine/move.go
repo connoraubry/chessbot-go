@@ -37,22 +37,44 @@ func indexToString(index int) string {
 	rank := index >> 3
 	file := index & 7
 
-	var fileToLetter = []rune{'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'}
-	var rankToLetter = []rune{'1', '2', '3', '4', '5', '6', '7', '8'}
-
 	return fmt.Sprintf("%v%v", string(fileToLetter[file]), string(rankToLetter[rank]))
 }
 
 //TODO: add support for multiple pieces attacking the same spot
 func (m *Move) String() string {
 
-	letter := getLetter(m.pieceName)
-	var capture rune
-	if m.capture {
-		capture = 'x'
+	switch m.castle {
+	case WHITEOO, BLACKOO:
+		return "O-O"
+	case WHITEOOO, BLACKOOO:
+		return "O-O-O"
 	}
-	s := fmt.Sprintf("%v%v%v", string(letter), string(capture), indexToString(m.end))
-	return s
+
+	var string_Bytes []byte
+
+	letter := getLetter(m.pieceName)
+
+	if letter != 0 {
+		string_Bytes = append(string_Bytes, byte(letter))
+	}
+
+	if m.capture {
+
+		if m.pieceName == PAWN {
+			string_Bytes = append(string_Bytes, byte(fileToLetter[m.start&7]))
+		}
+
+		string_Bytes = append(string_Bytes, 'x')
+	}
+
+	string_Bytes = append(string_Bytes, []byte(indexToString(m.end))...)
+
+	if m.promotion != EMPTY {
+		string_Bytes = append(string_Bytes, '=', byte(getLetter(m.promotion)))
+
+	}
+
+	return string(string_Bytes)
 }
 
 //works
@@ -91,6 +113,7 @@ func (gs *Gamestate) GetAllPawnMoves() []Move {
 
 	moves = append(moves, gs.GetAllPawnOneMoves()...)
 	moves = append(moves, gs.GetAllPawnDoubleMoves()...)
+	moves = append(moves, gs.GetAllPawnAttackMoves()...)
 
 	return moves
 }
@@ -272,6 +295,24 @@ func (gs *Gamestate) GetAllPawnDoubleMoves() []Move {
 	return moves
 }
 
+func (gs *Gamestate) GetPawnPromotions(start, end int, capture bool) []Move {
+	var moves []Move
+
+	for _, promotion := range Promotions {
+
+		m := Move{
+			start:     start,
+			end:       end,
+			promotion: promotion,
+			pieceName: PAWN,
+			player:    gs.player,
+			capture:   capture,
+		}
+		moves = append(moves, m)
+	}
+	return moves
+}
+
 func (gs *Gamestate) GetAllPawnOneMoves() []Move {
 
 	var moves []Move
@@ -283,28 +324,84 @@ func (gs *Gamestate) GetAllPawnOneMoves() []Move {
 	for one_move_bb > 0 {
 		lsb := one_move_bb.PopLSB()
 		idx := lsb.Index()
+		start := idx - PawnMoveOffsets[gs.player]
+		end := idx
 		if lsb.Rank() == BackRank[gs.player] {
-
-			for _, promotion := range Promotions {
-
-				m := Move{
-					start:     idx - PawnMoveOffsets[gs.player],
-					end:       idx,
-					promotion: promotion,
-					pieceName: PAWN,
-					player:    gs.player,
-				}
-				moves = append(moves, m)
-			}
+			moves = append(moves, gs.GetPawnPromotions(start, end, false)...)
 		} else {
 			m := Move{
-				start:     idx - PawnMoveOffsets[gs.player],
-				end:       idx,
+				start:     start,
+				end:       end,
 				pieceName: PAWN,
 				player:    gs.player,
 			}
 			moves = append(moves, m)
 		}
+	}
+
+	return moves
+}
+
+func (gs *Gamestate) GetAllPawnAttackMoves() []Move {
+	var moves []Move
+
+	pawn_bb := gs.Board.Pawns & gs.Board.PlayerPieces[gs.player]
+
+	var offset int
+	switch gs.player {
+	case WHITE:
+		offset = NORTH
+	case BLACK:
+		offset = SOUTH
+	}
+
+	for pawn_bb > 0 {
+		lsb := pawn_bb.PopLSB()
+		idx := lsb.Index()
+
+		if (lsb & FILE_A_BB) == 0 {
+			attack_spot_one := idx + offset - 1
+			attack_bb := Bitboard(1 << attack_spot_one)
+
+			if (attack_bb & gs.Board.PlayerPieces[Enemy[gs.player]]) > 0 {
+				if attack_bb.Rank() == BackRank[gs.player] {
+					moves = append(moves, gs.GetPawnPromotions(idx, attack_spot_one, true)...)
+				} else {
+					m := Move{
+						start:     idx,
+						end:       attack_spot_one,
+						pieceName: PAWN,
+						player:    gs.player,
+						capture:   true,
+					}
+					moves = append(moves, m)
+				}
+
+			}
+		}
+
+		if (lsb & FILE_H_BB) == 0 {
+			attack_spot_two := idx + offset + 1
+			attack_bb := Bitboard(1 << attack_spot_two)
+
+			if (attack_bb & gs.Board.PlayerPieces[Enemy[gs.player]]) > 0 {
+				if attack_bb.Rank() == BackRank[gs.player] {
+					moves = append(moves, gs.GetPawnPromotions(idx, attack_spot_two, true)...)
+				} else {
+					m := Move{
+						start:     idx,
+						end:       attack_spot_two,
+						pieceName: PAWN,
+						player:    gs.player,
+						capture:   true,
+					}
+					moves = append(moves, m)
+				}
+
+			}
+
+		}
+
 	}
 
 	return moves
