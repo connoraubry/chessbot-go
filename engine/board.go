@@ -12,7 +12,6 @@ type Board struct {
 
 	WhitePieces Bitboard
 	BlackPieces Bitboard
-	// PlayerPieces map[Player]Bitboard
 }
 
 func (b *Board) PlayerPieces(player Player) Bitboard {
@@ -28,7 +27,6 @@ func (b *Board) PlayerPieces(player Player) Bitboard {
 
 func NewBoard(FEN_board string) *Board {
 	b := new(Board)
-	// b.PlayerPieces = make(map[Player]Bitboard)
 	b.loadFENPositionsBitBoard(FEN_board)
 	return b
 }
@@ -52,12 +50,19 @@ func (b *Board) CopyBoard() *Board {
 		WhitePieces: b.WhitePieces,
 		BlackPieces: b.BlackPieces,
 	}
-	// newB.PlayerPieces = map[Player]Bitboard{
-	// 	WHITE: b.PlayerPieces(WHITE),
-	// 	BLACK: b.PlayerPieces(BLACK),
-	// }
 
 	return &newB
+}
+
+func (b *Board) ClearSpot(piece Bitboard) {
+	b.Pawns &= ^piece
+	b.Knights &= ^piece
+	b.Knights &= ^piece
+	b.Rooks &= ^piece
+	b.Queens &= ^piece
+	b.Kings &= ^piece
+	b.WhitePieces &= ^piece
+	b.BlackPieces &= ^piece
 }
 
 func (b *Board) RemovePiece(piece Bitboard, pieceName PieceName, player Player) {

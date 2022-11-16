@@ -39,8 +39,12 @@ func (e *Engine) GetAllMoves() []Move {
 
 func (e *Engine) TakeMove(m Move) {
 
-	// var newGamestate Gamestate
-	// var newBoard Board
+	var newGamestate Gamestate
+	var newBoard Board
+
+	currentGs := e.CurrentGamestate()
+
+	newCastle := currentGs.castle.Copy()
 
 	// if m.Castle != NO_CASTLE {
 	// 	newBoard = *e.TakeCastle(m)
@@ -48,16 +52,36 @@ func (e *Engine) TakeMove(m Move) {
 	// 	newBoard
 	// }
 
+	newBoard = *e.CurrentGamestate().Board.CopyBoard()
+
+	newBoard.ClearSpot(Bitboard(1 << m.start))
+	newBoard.ClearSpot(Bitboard(1 << m.end))
+
+	newBoard.AddPiece(Bitboard(1<<m.end), m.pieceName, m.player)
+
 	// currentGs := e.CurrentGamestate()
 
-	// newGamestate := Gamestate{
-	// 	Board:      currentGs.Board.CopyBoard(),
-	// 	player:     Enemy[currentGs.player],
-	// 	castle:     currentGs.castle.Copy(),
-	// 	en_passant: currentGs.en_passant,
-	// 	halfmove:   currentGs.halfmove,
-	// 	fullmove:   currentGs.fullmove,
-	// }
+	new_halfmove := currentGs.halfmove + 1
+	fullmove_increment := 0
+
+	if m.capture || m.pieceName == PAWN || m.Castle != NO_CASTLE {
+		new_halfmove = 0
+	}
+
+	if m.player == BLACK {
+		fullmove_increment = 1
+	}
+
+	newGamestate = Gamestate{
+		Board:      &newBoard,
+		player:     Enemy[currentGs.player],
+		castle:     newCastle,
+		en_passant: m.en_passant_revealed,
+		halfmove:   new_halfmove,
+		fullmove:   currentGs.fullmove + fullmove_increment,
+	}
+
+	e.GameStates = append(e.GameStates, newGamestate)
 }
 
 //TODO: Check if king in check for spots 1 and 2

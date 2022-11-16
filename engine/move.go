@@ -122,11 +122,12 @@ func (gs *Gamestate) GetMovesFromMoveBitboard(move_bb Bitboard, lsb Bitboard, pi
 		is_capture := (lsb_move & gs.Board.PlayerPieces(Enemy[gs.player])) > 0
 
 		m := Move{
-			start:     lsb.Index(),
-			end:       lsb_move.Index(),
-			pieceName: piece,
-			player:    gs.player,
-			capture:   is_capture,
+			start:               lsb.Index(),
+			end:                 lsb_move.Index(),
+			pieceName:           piece,
+			player:              gs.player,
+			capture:             is_capture,
+			en_passant_revealed: -1,
 		}
 		moves = append(moves, m)
 	}
@@ -251,11 +252,12 @@ func (gs *Gamestate) GetAllCastleMoves() []Move {
 		if gs.castle.whiteKing {
 			if emptyBoard&WOO_EMPTY_BOARD == WOO_EMPTY_BOARD {
 				m = Move{
-					start:     4,
-					end:       6,
-					pieceName: KING,
-					player:    gs.player,
-					Castle:    WHITEOO,
+					start:               4,
+					end:                 6,
+					pieceName:           KING,
+					player:              gs.player,
+					Castle:              WHITEOO,
+					en_passant_revealed: -1,
 				}
 				moves = append(moves, m)
 			}
@@ -263,11 +265,12 @@ func (gs *Gamestate) GetAllCastleMoves() []Move {
 		if gs.castle.whiteQueen {
 			if emptyBoard&WOOO_EMPTY_BOARD == WOOO_EMPTY_BOARD {
 				m = Move{
-					start:     4,
-					end:       2,
-					pieceName: KING,
-					player:    gs.player,
-					Castle:    WHITEOOO,
+					start:               4,
+					end:                 2,
+					pieceName:           KING,
+					player:              gs.player,
+					Castle:              WHITEOOO,
+					en_passant_revealed: -1,
 				}
 				moves = append(moves, m)
 
@@ -279,11 +282,12 @@ func (gs *Gamestate) GetAllCastleMoves() []Move {
 		if gs.castle.blackKing {
 			if emptyBoard&BOO_EMPTY_BOARD == BOO_EMPTY_BOARD {
 				m = Move{
-					start:     60,
-					end:       62,
-					pieceName: KING,
-					player:    gs.player,
-					Castle:    BLACKOO,
+					start:               60,
+					end:                 62,
+					pieceName:           KING,
+					player:              gs.player,
+					Castle:              BLACKOO,
+					en_passant_revealed: -1,
 				}
 				moves = append(moves, m)
 			}
@@ -291,11 +295,12 @@ func (gs *Gamestate) GetAllCastleMoves() []Move {
 		if gs.castle.blackQueen {
 			if emptyBoard&BOOO_EMPTY_BOARD == BOOO_EMPTY_BOARD {
 				m = Move{
-					start:     60,
-					end:       58,
-					pieceName: KING,
-					player:    gs.player,
-					Castle:    BLACKOOO,
+					start:               60,
+					end:                 58,
+					pieceName:           KING,
+					player:              gs.player,
+					Castle:              BLACKOOO,
+					en_passant_revealed: -1,
 				}
 				moves = append(moves, m)
 
@@ -341,12 +346,13 @@ func (gs *Gamestate) GetPawnPromotions(start, end int, capture bool) []Move {
 	for _, promotion := range Promotions {
 
 		m := Move{
-			start:     start,
-			end:       end,
-			promotion: promotion,
-			pieceName: PAWN,
-			player:    gs.player,
-			capture:   capture,
+			start:               start,
+			end:                 end,
+			promotion:           promotion,
+			pieceName:           PAWN,
+			player:              gs.player,
+			capture:             capture,
+			en_passant_revealed: -1,
 		}
 		moves = append(moves, m)
 	}
@@ -370,10 +376,11 @@ func (gs *Gamestate) GetAllPawnOneMoves() []Move {
 			moves = append(moves, gs.GetPawnPromotions(start, end, false)...)
 		} else {
 			m := Move{
-				start:     start,
-				end:       end,
-				pieceName: PAWN,
-				player:    gs.player,
+				start:               start,
+				end:                 end,
+				pieceName:           PAWN,
+				player:              gs.player,
+				en_passant_revealed: -1,
 			}
 			moves = append(moves, m)
 		}
@@ -410,11 +417,12 @@ func (gs *Gamestate) GetAllPawnAttackMoves() []Move {
 					moves = append(moves, gs.GetPawnPromotions(idx, attack_spot_one, true)...)
 				} else {
 					m := Move{
-						start:     idx,
-						end:       attack_spot_one,
-						pieceName: PAWN,
-						player:    gs.player,
-						capture:   true,
+						start:               idx,
+						end:                 attack_spot_one,
+						pieceName:           PAWN,
+						player:              gs.player,
+						capture:             true,
+						en_passant_revealed: -1,
 					}
 					moves = append(moves, m)
 				}
@@ -430,11 +438,12 @@ func (gs *Gamestate) GetAllPawnAttackMoves() []Move {
 					moves = append(moves, gs.GetPawnPromotions(idx, attack_spot_two, true)...)
 				} else {
 					m := Move{
-						start:     idx,
-						end:       attack_spot_two,
-						pieceName: PAWN,
-						player:    gs.player,
-						capture:   true,
+						start:               idx,
+						end:                 attack_spot_two,
+						pieceName:           PAWN,
+						player:              gs.player,
+						capture:             true,
+						en_passant_revealed: -1,
 					}
 					moves = append(moves, m)
 				}
