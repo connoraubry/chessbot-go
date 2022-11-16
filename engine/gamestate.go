@@ -11,6 +11,16 @@ type Castle struct {
 	blackQueen bool
 }
 
+func (cs *Castle) Copy() Castle {
+	newCS := Castle{
+		whiteKing:  cs.whiteKing,
+		blackKing:  cs.blackKing,
+		blackQueen: cs.blackQueen,
+		whiteQueen: cs.whiteQueen,
+	}
+	return newCS
+}
+
 type Gamestate struct {
 	Board      *Board
 	player     Player
@@ -39,4 +49,32 @@ func readFENFile(filepath string) string {
 		panic(err)
 	}
 	return string(bytes)
+}
+
+func (gs *Gamestate) EnPassantBitboard() Bitboard {
+	if gs.en_passant > -1 {
+		return Bitboard(1 << gs.en_passant)
+	}
+	return Bitboard(0)
+}
+
+func (gs *Gamestate) PrintBoard() {
+	gs.Board.PrintBoard()
+}
+
+func (cs *Castle) ToString() string {
+	var v []byte
+	if cs.whiteKing {
+		v = append(v, 'K')
+	}
+	if cs.whiteQueen {
+		v = append(v, 'Q')
+	}
+	if cs.blackKing {
+		v = append(v, 'k')
+	}
+	if cs.blackQueen {
+		v = append(v, 'q')
+	}
+	return string(v)
 }

@@ -23,13 +23,13 @@ func TestBoardInit(t *testing.T) {
 func TestNewBoard(t *testing.T) {
 	b := NewBoard(Starting_board_fen_string)
 
-	whiteKing := b.PlayerPieces[WHITE] & b.Kings
+	whiteKing := b.PlayerPieces(WHITE) & b.Kings
 	whiteKingIndex := whiteKing.Index()
 	if whiteKingIndex != 4 {
 		t.Fatalf(`White king index == %v. Expected %v`, whiteKingIndex, 4)
 	}
 
-	blackKing := b.PlayerPieces[BLACK] & b.Kings
+	blackKing := b.PlayerPieces(BLACK) & b.Kings
 	blackKingIndex := blackKing.Index()
 	if blackKingIndex != 60 {
 		t.Fatalf(`Black king index == %v. Expected %v`, blackKingIndex, 60)
@@ -57,13 +57,13 @@ func TestNewBoardRooks(t *testing.T) {
 
 	//white rooks
 	expected := Bitboard(0b10000001)
-	whiteRooks := b.PlayerPieces[WHITE] & b.Rooks
+	whiteRooks := b.PlayerPieces(WHITE) & b.Rooks
 	if whiteRooks != expected {
 		t.Fatalf(`White Rooks == %v. Expected %v`, whiteRooks, expected)
 	}
 
 	black_expected := expected << (56)
-	blackRooks := b.PlayerPieces[BLACK] & b.Rooks
+	blackRooks := b.PlayerPieces(BLACK) & b.Rooks
 	if blackRooks != black_expected {
 		t.Fatalf(`Black Rooks == %v. Expected %v`, blackRooks, black_expected)
 	}
@@ -72,8 +72,8 @@ func TestNewBoardRooks(t *testing.T) {
 func TestNewBoardBishops(t *testing.T) {
 	b := NewBoard(Starting_board_fen_string)
 
-	whiteBishops := b.PlayerPieces[WHITE] & b.Bishops
-	blackBishops := b.PlayerPieces[BLACK] & b.Bishops
+	whiteBishops := b.WhitePieces & b.Bishops
+	blackBishops := b.BlackPieces & b.Bishops
 
 	expected := Bitboard(0b00100100)
 	if whiteBishops != expected {
@@ -89,8 +89,8 @@ func TestNewBoardBishops(t *testing.T) {
 func TestNewBoardKnights(t *testing.T) {
 	b := NewBoard(Starting_board_fen_string)
 
-	whiteKnights := b.PlayerPieces[WHITE] & b.Knights
-	blackKnights := b.PlayerPieces[BLACK] & b.Knights
+	whiteKnights := b.PlayerPieces(WHITE) & b.Knights
+	blackKnights := b.PlayerPieces(BLACK) & b.Knights
 
 	expected := Bitboard(0b01000010)
 	if whiteKnights != expected {
@@ -119,7 +119,7 @@ func TestMiddleFEN(t *testing.T) {
 	if whiteKingindex != 4 {
 		t.Fatalf(`b.WhiteKingIndex == %v. Expected 4`, whiteKingindex)
 	}
-	blackKingindex := (b.PlayerPieces[BLACK] & b.Kings).Index()
+	blackKingindex := (b.PlayerPieces(BLACK) & b.Kings).Index()
 
 	if blackKingindex != 59 {
 		t.Fatalf(`b.BlackKingIndex == %v. Expected 60`, blackKingindex)
@@ -138,5 +138,54 @@ func TestMiddleFEN(t *testing.T) {
 	}
 	if b.Pawns != expected_pawns {
 		t.Fatalf(`b.Pawns == %v. Expected %v`, b.Pawns, expected_pawns)
+	}
+}
+
+func TestCopyBoard(t *testing.T) {
+
+	b := NewBoard("r1bk1b1r/1p3ppp/5n2/p1P1p3/2B5/4PN2/PP3PPP/R1B1K2R")
+	newB := b.CopyBoard()
+
+	newB.Kings = Bitboard(0)
+
+	if b.Kings == newB.Kings {
+		t.Fatalf(`Bitboard does not make deep copy`)
+	}
+
+	newB.WhitePieces = Bitboard(0)
+	if b.PlayerPieces(WHITE) == newB.PlayerPieces(WHITE) {
+		t.Fatalf(`Bitboard does not make deep copy`)
+	}
+	if b.PlayerPieces(BLACK) != newB.PlayerPieces(BLACK) {
+		t.Fatalf(`Bitboard does not make deep copy`)
+	}
+
+	if b == newB {
+		t.Fatalf(`Bitboard does not make deep copy`)
+	}
+}
+
+func TestRemovePiece(t *testing.T) {
+	b := NewBoard("r1bk1b1r/1p3ppp/5n2/p1P1p3/2B5/4PN2/PP3PPP/R1B1K2R")
+
+	expected_b := NewBoard("r1bk1b1r/1p3ppp/5n2/p1P1p3/2B5/4PN2/PP3PPP/2B1K2R")
+
+	b.RemovePiece(Bitboard(1), ROOK, WHITE)
+
+	if *b != *expected_b {
+		t.Fatalf(`Remove piece does not remove piece`)
+		b.PrintBoard()
+	}
+}
+func TestAddPiece(t *testing.T) {
+	b := NewBoard("r1bk1b1r/1p3ppp/5n2/p1P1p3/2B5/4PN2/PP3PPP/2B1K2R")
+
+	expected_b := NewBoard("r1bk1b1r/1p3ppp/5n2/p1P1p3/2B5/4PN2/PP3PPP/R1B1K2R")
+
+	b.AddPiece(Bitboard(1), ROOK, WHITE)
+
+	if *b != *expected_b {
+		t.Fatalf(`Add piece does not add piece`)
+		b.PrintBoard()
 	}
 }

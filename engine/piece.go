@@ -44,6 +44,45 @@ func getLetter(name PieceName) rune {
 	return letter
 }
 
+func getUnicode(name PieceName, player Player) rune {
+	var uni rune
+	if player == WHITE {
+		switch name {
+		case KING:
+			uni = '\u2654'
+		case QUEEN:
+			uni = '\u2655'
+		case ROOK:
+			uni = '\u2656'
+		case BISHOP:
+			uni = '\u2657'
+		case KNIGHT:
+			uni = '\u2658'
+		case PAWN:
+			uni = '\u2659'
+		}
+	} else if player == BLACK {
+		switch name {
+		case KING:
+			uni = '\u265A'
+		case QUEEN:
+			uni = '\u265B'
+		case ROOK:
+			uni = '\u265C'
+		case BISHOP:
+			uni = '\u265D'
+		case KNIGHT:
+			uni = '\u265E'
+		case PAWN:
+			uni = '\u265F'
+		}
+	} else {
+		uni = '\u00B7'
+	}
+
+	return uni
+}
+
 func letterToPlayer(letter rune) Player {
 
 	var player Player

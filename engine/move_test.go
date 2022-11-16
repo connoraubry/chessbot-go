@@ -89,7 +89,7 @@ func TestGetAllURDiagonalMovesBB(t *testing.T) {
 	// all_expected := 1441174017036779520
 	expected_urd_moves := Bitboard(1152925911260069888)
 
-	whiteBishosp := gs.Board.Bishops & gs.Board.PlayerPieces[WHITE]
+	whiteBishosp := gs.Board.Bishops & gs.Board.PlayerPieces(WHITE)
 
 	moves_bb := gs.GetAllURDiagonalMovesBitboard(whiteBishosp)
 	if moves_bb != expected_urd_moves {
@@ -103,7 +103,7 @@ func TestGetAllDRDiagonalMovesBB(t *testing.T) {
 	// all_expected := 1441174017036779520
 	expected_urd_moves := Bitboard(288248105776709632)
 
-	whiteBishosp := gs.Board.Bishops & gs.Board.PlayerPieces[WHITE]
+	whiteBishosp := gs.Board.Bishops & gs.Board.PlayerPieces(WHITE)
 
 	moves_bb := gs.GetAllDRDiagonalMovesBitboard(whiteBishosp)
 	if moves_bb != expected_urd_moves {
@@ -170,6 +170,180 @@ func TestGetAllCastleMoves4(t *testing.T) {
 	if len(moves) != expected_length {
 		t.Fatalf(`Moves != expected. %v != %v`, len(moves), expected_length)
 
+	}
+}
+
+func TestSpotUnderAttack(t *testing.T) {
+	gs := NewGamestateFEN("rnbqkbnr/pppp1ppp/8/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R b KQkq - 1 2")
+	expected := true
+	actual := gs.SpotUnderAttack(68719476736, BLACK)
+
+	if expected != actual {
+		t.Fatalf(`Spot under attack = %v. Expected %v`, actual, expected)
+	}
+	result = gs.GetAllMoves()
+}
+
+func TestMultipleSpotsUnderAttack(t *testing.T) {
+	gs := NewGamestateFEN("rnbqkb1r/p4ppp/2p1pn2/1p1p1Q2/4P3/2N2N2/PPPP1PPP/R1B1KB1R w KQkq b6 0 6")
+
+	black_pieces := gs.Board.BlackPieces
+
+	expected_under_attack := 5
+	actual_under_attack := 0
+	for black_pieces > 0 {
+		lsb := black_pieces.PopLSB()
+		if gs.SpotUnderAttack(lsb, BLACK) {
+			actual_under_attack += 1
+		}
+	}
+	if expected_under_attack != actual_under_attack {
+		t.Fatalf(`Expected %v pieces under attack. Got %v`, expected_under_attack, actual_under_attack)
+	}
+}
+func TestMultipleSpotsUnderAttackTwo(t *testing.T) {
+	gs := NewGamestateFEN("r3kb1r/p2n1ppp/b1p1pn2/qB1pNQ2/1P2P3/2N5/P1PP1PPP/R1B1K2R w KQkq - 3 9")
+
+	black_pieces := gs.Board.BlackPieces
+
+	expected_under_attack := 8
+	actual_under_attack := 0
+	for black_pieces > 0 {
+		lsb := black_pieces.PopLSB()
+		if gs.SpotUnderAttack(lsb, BLACK) {
+			actual_under_attack += 1
+		}
+	}
+	if expected_under_attack != actual_under_attack {
+		t.Fatalf(`Expected %v pieces under attack. Got %v`, expected_under_attack, actual_under_attack)
+	}
+
+	white_pieces := gs.Board.PlayerPieces(WHITE)
+	expected_under_attack = 6
+	actual_under_attack = 0
+	for white_pieces > 0 {
+		lsb := white_pieces.PopLSB()
+		if gs.SpotUnderAttack(lsb, WHITE) {
+			actual_under_attack += 1
+		}
+	}
+	if expected_under_attack != actual_under_attack {
+		t.Fatalf(`Expected %v pieces under attack. Got %v`, expected_under_attack, actual_under_attack)
+	}
+}
+
+func TestMultipleSpotsUnderAttackTwo_Boards(t *testing.T) {
+	gs := NewGamestateFEN("r3kb1r/p2n1ppp/b1p1pn2/qB1pNQ2/1P2P3/2N5/P1PP1PPP/R1B1K2R w KQkq - 3 9")
+
+	white_pieces := gs.Board.PlayerPieces(WHITE)
+	expected_under_attack_bb := Bitboard(215050354944)
+	actual_under_attack_bb := Bitboard(0)
+	for white_pieces > 0 {
+		lsb := white_pieces.PopLSB()
+		if gs.SpotUnderAttack(lsb, WHITE) {
+			actual_under_attack_bb |= lsb
+		}
+	}
+	if expected_under_attack_bb != actual_under_attack_bb {
+		t.Fatalf(`Expected %v pieces under attack. Got %v`, expected_under_attack_bb, actual_under_attack_bb)
+	}
+}
+
+func TestUnderAttackPawn(t *testing.T) {
+	gs := NewGamestateFEN("4k3/8/8/8/5p2/4K3/8/8 w - - 0 1")
+
+	white_pieces := gs.Board.PlayerPieces(WHITE)
+	white_lsb := white_pieces.LSB()
+
+	if !gs.SpotUnderAttack(white_lsb, WHITE) {
+		t.Fatalf(`Spot not under attack`)
+	}
+
+}
+func TestNotUnderAttack(t *testing.T) {
+	gs := NewGamestateFEN("4k3/8/8/8/5r2/4K3/8/8 w - - 0 1")
+	white_pieces := gs.Board.PlayerPieces(WHITE)
+	white_lsb := white_pieces.LSB()
+
+	if gs.SpotUnderAttack(white_lsb, WHITE) {
+		t.Fatalf(`Spot not under attack`)
+	}
+}
+
+func TestUnderAttackRook(t *testing.T) {
+	gs := NewGamestateFEN("4k3/8/8/8/8/4K2r/8/8 w - - 0 1")
+	white_pieces := gs.Board.PlayerPieces(WHITE)
+	white_lsb := white_pieces.LSB()
+
+	if !gs.SpotUnderAttack(white_lsb, WHITE) {
+		t.Fatalf(`Spot not under attack`)
+	}
+}
+func TestUnderAttackRook2(t *testing.T) {
+	gs := NewGamestateFEN("4k3/8/4r3/8/8/4K3/8/8 w - - 0 1")
+	white_pieces := gs.Board.PlayerPieces(WHITE)
+	white_lsb := white_pieces.LSB()
+
+	if !gs.SpotUnderAttack(white_lsb, WHITE) {
+		t.Fatalf(`Spot not under attack`)
+	}
+}
+
+func TestUnderAttackRook3(t *testing.T) {
+	gs := NewGamestateFEN("4k3/8/8/8/4r3/4K3/8/8 w - - 0 1")
+	white_pieces := gs.Board.PlayerPieces(WHITE)
+	white_lsb := white_pieces.LSB()
+
+	if !gs.SpotUnderAttack(white_lsb, WHITE) {
+		t.Fatalf(`Spot not under attack`)
+	}
+}
+
+func TestUnderAttackQueen(t *testing.T) {
+	gs := NewGamestateFEN("4k3/q7/8/8/8/4K3/8/8 w - - 0 1")
+	white_pieces := gs.Board.PlayerPieces(WHITE)
+	white_lsb := white_pieces.LSB()
+
+	if !gs.SpotUnderAttack(white_lsb, WHITE) {
+		t.Fatalf(`Spot not under attack`)
+	}
+}
+func TestUnderAttackQueen2(t *testing.T) {
+	gs := NewGamestateFEN("4k3/q7/8/8/8/4K3/8/8 w - - 0 1")
+	white_pieces := gs.Board.PlayerPieces(WHITE)
+	white_lsb := white_pieces.LSB()
+
+	if !gs.SpotUnderAttack(white_lsb, WHITE) {
+		t.Fatalf(`Spot not under attack`)
+	}
+}
+func TestUnderAttackQueen3(t *testing.T) {
+	gs := NewGamestateFEN("4k3/8/8/8/8/4K3/3q4/8 w - - 0 1")
+	white_pieces := gs.Board.PlayerPieces(WHITE)
+	white_lsb := white_pieces.LSB()
+
+	if !gs.SpotUnderAttack(white_lsb, WHITE) {
+		t.Fatalf(`Spot not under attack`)
+	}
+}
+
+func TestNotUnderAttackQueen(t *testing.T) {
+	gs := NewGamestateFEN("4k3/8/8/8/8/4K3/2q5/8 w - - 0 1")
+	white_pieces := gs.Board.PlayerPieces(WHITE)
+	white_lsb := white_pieces.LSB()
+
+	if gs.SpotUnderAttack(white_lsb, WHITE) {
+		t.Fatalf(`Spot not under attack`)
+	}
+}
+
+func TestNotUnderAttackKnight(t *testing.T) {
+	gs := NewGamestateFEN("4k3/8/8/5n2/8/4K3/2q5/8 w - - 0 1")
+	white_pieces := gs.Board.PlayerPieces(WHITE)
+	white_lsb := white_pieces.LSB()
+
+	if !gs.SpotUnderAttack(white_lsb, WHITE) {
+		t.Fatalf(`Spot not under attack`)
 	}
 }
 

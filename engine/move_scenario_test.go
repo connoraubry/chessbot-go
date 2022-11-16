@@ -103,3 +103,39 @@ func TestScenarioOne(t *testing.T) {
 		}
 	}
 }
+
+func TestScenarioTwo(t *testing.T) {
+	gs := NewGamestateFEN("1R1b1k2/r6B/NPnp4/p2r4/8/2Pp2Pp/8/7K b - - 0 1")
+	var moves = []string{
+		"Rxa6", "Ra8", "Ke8", "Nd4", "Ke7",
+		"Rg5", "Kg7", "Rc7", "Rh5", "Re7",
+		"h2", "Rxh7", "Rg7", "a4", "Ne7",
+		"Re5", "Nxb8", "Rf7", "Nb4", "Rb7",
+		"Rb5", "Rf5", "Kf7", "Rd4", "Rc5",
+		"Rd7", "d2", "Ne5",
+
+		//pseudo legal
+		"Kg8", "Bc7", "Bxb6", "Be7", "Bf6", "Bg5", "Bh4",
+	}
+	var movesFound = make(map[string]bool)
+	for _, str := range moves {
+		movesFound[str] = false
+	}
+
+	allMoves := gs.GetAllMoves()
+
+	for _, move := range allMoves {
+		_, ok := movesFound[move.String()]
+		if ok {
+			movesFound[move.String()] = true
+		} else {
+			t.Fatalf(`Move %v not in supplied list.`, move.String())
+		}
+	}
+
+	for move, result := range movesFound {
+		if !result {
+			t.Fatalf(`Did not find move %v.`, move)
+		}
+	}
+}
