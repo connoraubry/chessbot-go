@@ -37,34 +37,71 @@ func (e *Engine) GetAllMoves() []Move {
 	return e.CurrentGamestate().GetAllMoves()
 }
 
-func (e *Engine) TakeMove(m Move) {
+func (e *Engine) ExportToFEN() string {
+	return ExportToFEN(e.CurrentGamestate())
+}
+
+func (e *Engine) TakeMove(m Move) bool {
 
 	var newGamestate Gamestate
-	var newBoard Board
+	var newBoard *Board
+	var success bool
 
 	currentGs := e.CurrentGamestate()
 
 	newCastle := currentGs.castle.Copy()
 
-	// if m.Castle != NO_CASTLE {
-	// 	newBoard = *e.TakeCastle(m)
-	// } else {
-	// 	newBoard
-	// }
+	if m.Castle != NO_CASTLE {
+		newBoard, success = e.TakeCastle(m)
+		if !success {
+			return false
+		}
+		switch m.player {
+		case WHITE:
+			newCastle.whiteKing = false
+			newCastle.whiteQueen = false
+		case BLACK:
+			newCastle.blackKing = false
+			newCastle.blackQueen = false
+		}
+	} else {
+		newBoard = e.CurrentGamestate().Board.CopyBoard()
 
-	newBoard = *e.CurrentGamestate().Board.CopyBoard()
+		newBoard.ClearSpot(Bitboard(1 << m.start))
+		newBoard.ClearSpot(Bitboard(1 << m.end))
 
-	newBoard.ClearSpot(Bitboard(1 << m.start))
-	newBoard.ClearSpot(Bitboard(1 << m.end))
+		if m.pieceName == PAWN {
+			if m.promotion != EMPTY {
+				newBoard.AddPiece(Bitboard(1<<m.end), m.promotion, m.player)
+			} else if newBoard.PlayerPieces(Enemy[m.player])&Bitboard(1<<m.end) == 0 {
+				//en passant
+				newBoard.AddPiece(Bitboard(1<<m.end), m.pieceName, m.player)
+				pawn_offset := PawnMoveOffsets[m.player]
+				newBoard.RemovePiece(Bitboard(1<<(m.end-pawn_offset)), PAWN, Enemy[m.player])
+			} else {
+				newBoard.AddPiece(Bitboard(1<<m.end), m.pieceName, m.player)
+			}
+		} else {
+			newBoard.AddPiece(Bitboard(1<<m.end), m.pieceName, m.player)
 
-	newBoard.AddPiece(Bitboard(1<<m.end), m.pieceName, m.player)
+		}
 
-	// currentGs := e.CurrentGamestate()
+	}
 
+	//edit castling
+	newCastle.whiteKing = newCastle.whiteKing && WhiteKingCastleValid(newBoard)
+	newCastle.whiteQueen = newCastle.whiteQueen && WhiteQueenCastleValid(newBoard)
+	newCastle.blackKing = newCastle.blackKing && BlackKingCastleValid(newBoard)
+	newCastle.blackQueen = newCastle.blackKing && BlackQueenCastleValid(newBoard)
+
+	currKing := newBoard.PlayerPieces(m.player) & newBoard.Kings
+	if newBoard.SpotUnderAttack(currKing, m.player) {
+		return false
+	}
 	new_halfmove := currentGs.halfmove + 1
 	fullmove_increment := 0
 
-	if m.capture || m.pieceName == PAWN || m.Castle != NO_CASTLE {
+	if m.capture || m.pieceName == PAWN || m.Castle != NO_CASTLE || currentGs.castle != newCastle {
 		new_halfmove = 0
 	}
 
@@ -73,7 +110,7 @@ func (e *Engine) TakeMove(m Move) {
 	}
 
 	newGamestate = Gamestate{
-		Board:      &newBoard,
+		Board:      newBoard,
 		player:     Enemy[currentGs.player],
 		castle:     newCastle,
 		en_passant: m.en_passant_revealed,
@@ -82,48 +119,112 @@ func (e *Engine) TakeMove(m Move) {
 	}
 
 	e.GameStates = append(e.GameStates, newGamestate)
+	return true
 }
 
-//TODO: Check if king in check for spots 1 and 2
-// func (e *Engine) TakeCastle(m Move) *Board {
-// 	newBoard := e.CurrentGamestate().Board.CopyBoard()
-// 	switch m.Castle {
-// 	case WHITEOO:
-// 		newBoard.Kings &= ^Bitboard(16)
-// 		newBoard.Rooks &= ^Bitboard(128)
-// 		newBoard.PlayerPieces(WHITE) &= Bitboard(18446744073709551375)
+func WhiteKingCastleValid(b *Board) bool {
+	startKing := Bitboard(16)
+	startRook := Bitboard(128)
+	if b.Kings&b.WhitePieces&startKing == 0 {
+		return false
+	}
+	if b.Rooks&b.WhitePieces&startRook == 0 {
+		return false
+	}
+	return true
+}
+func WhiteQueenCastleValid(b *Board) bool {
+	startKing := Bitboard(16)
+	startRook := Bitboard(1)
+	if b.Kings&b.WhitePieces&startKing == 0 {
+		return false
+	}
+	if b.Rooks&b.WhitePieces&startRook == 0 {
+		return false
+	}
+	return true
+}
 
-// 		newBoard.Rooks |= Bitboard(32)
-// 		newBoard.Kings |= Bitboard(64)
-// 		newBoard.PlayerPieces(WHITE) |= Bitboard(96)
-// 	case WHITEOOO:
-// 		newBoard.Kings &= ^Bitboard(16)
-// 		newBoard.Rooks &= ^Bitboard(1)
-// 		newBoard.PlayerPieces(WHITE) &= Bitboard(18446744073709551584)
+func BlackKingCastleValid(b *Board) bool {
+	startKing := Bitboard(1152921504606846976)
+	startRook := Bitboard(9223372036854775808)
+	if b.Kings&b.BlackPieces&startKing == 0 {
+		return false
+	}
+	if b.Rooks&b.BlackPieces&startRook == 0 {
+		return false
+	}
+	return true
+}
+func BlackQueenCastleValid(b *Board) bool {
+	startKing := Bitboard(1152921504606846976)
+	startRook := Bitboard(72057594037927936)
+	if b.Kings&b.BlackPieces&startKing == 0 {
+		return false
+	}
+	if b.Rooks&b.BlackPieces&startRook == 0 {
+		return false
+	}
+	return true
+}
 
-// 		newBoard.Kings |= Bitboard(4)
-// 		newBoard.Rooks |= Bitboard(8)
-// 		newBoard.PlayerPieces(WHITE) |= Bitboard(12)
-// 	case BLACKOO:
-// 		newBoard.Kings &= ^Bitboard(1152921504606846976)
-// 		newBoard.Rooks &= ^Bitboard(9223372036854775808)
-// 		newBoard.PlayerPieces[BLACK] &= Bitboard(1152921504606846975)
+func (e *Engine) TakeCastle(m Move) (*Board, bool) {
 
-// 		newBoard.Kings |= Bitboard(4611686018427387904)
-// 		newBoard.Rooks |= Bitboard(2305843009213693952)
-// 		newBoard.PlayerPieces[BLACK] |= Bitboard(6917529027641081856)
-// 	case BLACKOOO:
-// 		newBoard.Kings &= ^Bitboard(1152921504606846976)
-// 		newBoard.Rooks &= ^Bitboard(72057594037927936)
-// 		newBoard.PlayerPieces[BLACK] &= Bitboard(16212958658533785599)
+	newBoard := e.CurrentGamestate().Board.CopyBoard()
 
-// 		newBoard.Kings |= Bitboard(288230376151711744)
-// 		newBoard.Rooks |= Bitboard(576460752303423488)
-// 		newBoard.PlayerPieces[BLACK] |= Bitboard(864691128455135232)
-// 	}
-// 	return newBoard
-// }
+	var startKing Bitboard
+	var endKing Bitboard
+	var startRook Bitboard
+	var endRook Bitboard
+	var player Player
 
+	switch m.Castle {
+	case WHITEOO:
+		startKing = Bitboard(16)
+		endKing = Bitboard(64)
+		startRook = Bitboard(128)
+		endRook = Bitboard(32)
+		player = WHITE
+
+	case WHITEOOO:
+		startKing = Bitboard(16)
+		endKing = Bitboard(4)
+		startRook = Bitboard(1)
+		endRook = Bitboard(8)
+		player = WHITE
+
+	case BLACKOO:
+		startKing = Bitboard(1152921504606846976)
+		endKing = Bitboard(4611686018427387904)
+		startRook = Bitboard(9223372036854775808)
+		endRook = Bitboard(2305843009213693952)
+		player = BLACK
+	case BLACKOOO:
+		startKing = Bitboard(1152921504606846976)
+		endKing = Bitboard(288230376151711744)
+		startRook = Bitboard(72057594037927936)
+		endRook = Bitboard(576460752303423488)
+		player = BLACK
+	}
+	newBoard.RemovePiece(startKing, KING, player)
+	newBoard.RemovePiece(startRook, ROOK, player)
+
+	newBoard.AddPiece(endRook, KING, player)
+	if newBoard.SpotUnderAttack(endRook, player) {
+		return newBoard, false
+	}
+	newBoard.RemovePiece(endRook, KING, player)
+
+	newBoard.AddPiece(endKing, KING, player)
+	newBoard.AddPiece(endRook, ROOK, player)
+
+	if newBoard.SpotUnderAttack(endKing, player) {
+		return newBoard, false
+	}
+
+	return newBoard, !newBoard.SpotUnderAttack(endKing, player)
+
+}
 func (e *Engine) UndoMove() {
 	if len(e.GameStates) > 0 {
 		e.GameStates = e.GameStates[:len(e.GameStates)-1]
@@ -135,7 +236,8 @@ func (e *Engine) Print() {
 	cgs := e.CurrentGamestate()
 	cgs.PrintBoard()
 
-	fmt.Printf("Castle: %v\nEn Passant: %v\nHalfmove: %v\nFullmove: %v\n",
+	fmt.Printf("Move: %v\nCastle: %v\nEn Passant: %v\nHalfmove: %v\nFullmove: %v\n",
+		cgs.player,
 		cgs.castle.ToString(),
 		EPToString(cgs.en_passant),
 		cgs.halfmove,

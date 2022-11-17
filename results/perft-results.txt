@@ -1,0 +1,12 @@
+Depth: 1. Legal moves: 20
+39.75µs
+Depth: 2. Legal moves: 400
+383.666µs
+Depth: 3. Legal moves: 8902
+7.474709ms
+Depth: 4. Legal moves: 197281
+79.050791ms
+Depth: 5. Legal moves: 4865609
+1.625302084s
+Depth: 6. Legal moves: 119060374
+40.758833292s

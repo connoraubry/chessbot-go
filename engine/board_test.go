@@ -189,3 +189,39 @@ func TestAddPiece(t *testing.T) {
 		b.PrintBoard()
 	}
 }
+
+func TestPieceAndPlayerFromIndex(t *testing.T) {
+	b := NewBoard("r1bk1b1r/1p3ppp/5n2/p1P1p3/2B5/4PN2/PP3PPP/2B1K2R")
+
+	piece, player := b.PieceAndPlayerFromIndex(0)
+	if piece != EMPTY && player != NO_PLAYER {
+		t.Fatalf(`%v!=%v or %v!=%v`, piece, EMPTY, player, NO_PLAYER)
+	}
+	piece, player = b.PieceAndPlayerFromIndex(2)
+	if piece != BISHOP && player != WHITE {
+		t.Fatalf(`%v!=%v or %v!=%v`, piece, BISHOP, player, WHITE)
+	}
+	piece, player = b.PieceAndPlayerFromIndex(4)
+	if piece != KING && player != WHITE {
+		t.Fatalf(`%v!=%v or %v!=%v`, piece, KING, player, WHITE)
+	}
+}
+func TestExportToFEN(t *testing.T) {
+	expected := "r1bk1b1r/1p3ppp/5n2/p1P1p3/2B5/4PN2/PP3PPP/2B1K2R"
+	b := NewBoard(expected)
+	exported_b := b.ExportToFEN()
+
+	if expected != exported_b {
+		t.Fatalf(`%v != %v`, expected, exported_b)
+	}
+}
+
+func TestExportToFEN2(t *testing.T) {
+	expected := "rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPPBPPP/RNBQK1NR"
+	b := NewBoard(expected)
+	exported_b := b.ExportToFEN()
+
+	if expected != exported_b {
+		t.Fatalf(`%v != %v`, expected, exported_b)
+	}
+}

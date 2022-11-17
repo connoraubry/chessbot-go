@@ -115,3 +115,40 @@ func letterToPieceName(letter rune) PieceName {
 	}
 	return name
 }
+
+func pieceAndPlayertoLetter(piece PieceName, player Player) rune {
+	var uni rune
+	if player == WHITE {
+		switch piece {
+		case KING:
+			uni = 'K'
+		case QUEEN:
+			uni = 'Q'
+		case ROOK:
+			uni = 'R'
+		case BISHOP:
+			uni = 'B'
+		case KNIGHT:
+			uni = 'N'
+		case PAWN:
+			uni = 'P'
+		}
+	} else if player == BLACK {
+		switch piece {
+		case KING:
+			uni = 'k'
+		case QUEEN:
+			uni = 'q'
+		case ROOK:
+			uni = 'r'
+		case BISHOP:
+			uni = 'b'
+		case KNIGHT:
+			uni = 'n'
+		case PAWN:
+			uni = 'p'
+		}
+	}
+
+	return uni
+}

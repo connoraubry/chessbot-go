@@ -57,7 +57,7 @@ func (b *Board) CopyBoard() *Board {
 func (b *Board) ClearSpot(piece Bitboard) {
 	b.Pawns &= ^piece
 	b.Knights &= ^piece
-	b.Knights &= ^piece
+	b.Bishops &= ^piece
 	b.Rooks &= ^piece
 	b.Queens &= ^piece
 	b.Kings &= ^piece
@@ -137,6 +137,80 @@ func (b *Board) BlackKing() Bitboard {
 	return b.PlayerPieces(BLACK) & b.Kings
 }
 
+func (b *Board) PieceAndPlayerFromIndex(index int) (PieceName, Player) {
+	var piece PieceName
+	var player Player
+
+	mask := Bitboard(1 << index)
+
+	if mask&b.WhitePieces > 0 {
+		player = WHITE
+	} else if mask&b.BlackPieces > 0 {
+		player = BLACK
+	}
+
+	if mask&b.Pawns > 0 {
+		piece = PAWN
+	} else if mask&b.Knights > 0 {
+		piece = KNIGHT
+	} else if mask&b.Bishops > 0 {
+		piece = BISHOP
+	} else if mask&b.Rooks > 0 {
+		piece = ROOK
+	} else if mask&b.Queens > 0 {
+		piece = QUEEN
+	} else if mask&b.Kings > 0 {
+		piece = KING
+	}
+
+	return piece, player
+
+}
+
+func (b *Board) ExportToFEN() string {
+	rank := 7
+	file := 0
+	// split := 7
+
+	var bytelist []byte
+
+	count := 0
+	for file < 8 && rank >= 0 {
+
+		piece, player := b.PieceAndPlayerFromIndex(file + (rank * 8))
+
+		if piece == EMPTY {
+			count += 1
+		} else {
+			if count > 0 {
+				bytelist = append(bytelist, byte(count)+'0')
+				count = 0
+			}
+			bytelist = append(bytelist, byte(pieceAndPlayertoLetter(piece, player)))
+		}
+
+		file += 1
+
+		if file == 8 {
+			file = 0
+			rank -= 1
+
+			if count > 0 {
+				bytelist = append(bytelist, byte(count)+'0')
+				count = 0
+			}
+			if rank >= 0 {
+				bytelist = append(bytelist, '/')
+
+			}
+
+		}
+	}
+
+	return string(bytelist)
+
+}
+
 func (b *Board) loadFENPositionsBitBoard(FEN_board string) {
 
 	rank := 7
@@ -175,7 +249,7 @@ func (b *Board) PrintBoard() {
 	file := 0
 	bottom := "  a b c d e f g h"
 	fmt.Printf("%v\n", bottom)
-	row := []rune{'7'}
+	row := []rune{'8'}
 	for (file >= 0) && (rank >= 0) {
 		index := file + (rank * 8)
 

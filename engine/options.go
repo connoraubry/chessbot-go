@@ -1,7 +1,5 @@
 package engine
 
-import "fmt"
-
 /*
 Provides arguments for input to the engine
 
@@ -19,7 +17,6 @@ func ParseOptions(opts ...interface{}) (Options, error) {
 	res := Options{}
 
 	for _, opt := range opts {
-		fmt.Println(opt)
 		switch v := opt.(type) {
 		case OptFenFile:
 			res.FenFilePath = string(v)

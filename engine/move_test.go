@@ -176,7 +176,7 @@ func TestGetAllCastleMoves4(t *testing.T) {
 func TestSpotUnderAttack(t *testing.T) {
 	gs := NewGamestateFEN("rnbqkbnr/pppp1ppp/8/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R b KQkq - 1 2")
 	expected := true
-	actual := gs.SpotUnderAttack(68719476736, BLACK)
+	actual := gs.Board.SpotUnderAttack(68719476736, BLACK)
 
 	if expected != actual {
 		t.Fatalf(`Spot under attack = %v. Expected %v`, actual, expected)
@@ -193,7 +193,7 @@ func TestMultipleSpotsUnderAttack(t *testing.T) {
 	actual_under_attack := 0
 	for black_pieces > 0 {
 		lsb := black_pieces.PopLSB()
-		if gs.SpotUnderAttack(lsb, BLACK) {
+		if gs.Board.SpotUnderAttack(lsb, BLACK) {
 			actual_under_attack += 1
 		}
 	}
@@ -210,7 +210,7 @@ func TestMultipleSpotsUnderAttackTwo(t *testing.T) {
 	actual_under_attack := 0
 	for black_pieces > 0 {
 		lsb := black_pieces.PopLSB()
-		if gs.SpotUnderAttack(lsb, BLACK) {
+		if gs.Board.SpotUnderAttack(lsb, BLACK) {
 			actual_under_attack += 1
 		}
 	}
@@ -223,7 +223,7 @@ func TestMultipleSpotsUnderAttackTwo(t *testing.T) {
 	actual_under_attack = 0
 	for white_pieces > 0 {
 		lsb := white_pieces.PopLSB()
-		if gs.SpotUnderAttack(lsb, WHITE) {
+		if gs.Board.SpotUnderAttack(lsb, WHITE) {
 			actual_under_attack += 1
 		}
 	}
@@ -240,7 +240,7 @@ func TestMultipleSpotsUnderAttackTwo_Boards(t *testing.T) {
 	actual_under_attack_bb := Bitboard(0)
 	for white_pieces > 0 {
 		lsb := white_pieces.PopLSB()
-		if gs.SpotUnderAttack(lsb, WHITE) {
+		if gs.Board.SpotUnderAttack(lsb, WHITE) {
 			actual_under_attack_bb |= lsb
 		}
 	}
@@ -255,7 +255,7 @@ func TestUnderAttackPawn(t *testing.T) {
 	white_pieces := gs.Board.PlayerPieces(WHITE)
 	white_lsb := white_pieces.LSB()
 
-	if !gs.SpotUnderAttack(white_lsb, WHITE) {
+	if !gs.Board.SpotUnderAttack(white_lsb, WHITE) {
 		t.Fatalf(`Spot not under attack`)
 	}
 
@@ -265,7 +265,7 @@ func TestNotUnderAttack(t *testing.T) {
 	white_pieces := gs.Board.PlayerPieces(WHITE)
 	white_lsb := white_pieces.LSB()
 
-	if gs.SpotUnderAttack(white_lsb, WHITE) {
+	if gs.Board.SpotUnderAttack(white_lsb, WHITE) {
 		t.Fatalf(`Spot not under attack`)
 	}
 }
@@ -275,7 +275,7 @@ func TestUnderAttackRook(t *testing.T) {
 	white_pieces := gs.Board.PlayerPieces(WHITE)
 	white_lsb := white_pieces.LSB()
 
-	if !gs.SpotUnderAttack(white_lsb, WHITE) {
+	if !gs.Board.SpotUnderAttack(white_lsb, WHITE) {
 		t.Fatalf(`Spot not under attack`)
 	}
 }
@@ -284,7 +284,7 @@ func TestUnderAttackRook2(t *testing.T) {
 	white_pieces := gs.Board.PlayerPieces(WHITE)
 	white_lsb := white_pieces.LSB()
 
-	if !gs.SpotUnderAttack(white_lsb, WHITE) {
+	if !gs.Board.SpotUnderAttack(white_lsb, WHITE) {
 		t.Fatalf(`Spot not under attack`)
 	}
 }
@@ -294,7 +294,7 @@ func TestUnderAttackRook3(t *testing.T) {
 	white_pieces := gs.Board.PlayerPieces(WHITE)
 	white_lsb := white_pieces.LSB()
 
-	if !gs.SpotUnderAttack(white_lsb, WHITE) {
+	if !gs.Board.SpotUnderAttack(white_lsb, WHITE) {
 		t.Fatalf(`Spot not under attack`)
 	}
 }
@@ -304,7 +304,7 @@ func TestUnderAttackQueen(t *testing.T) {
 	white_pieces := gs.Board.PlayerPieces(WHITE)
 	white_lsb := white_pieces.LSB()
 
-	if !gs.SpotUnderAttack(white_lsb, WHITE) {
+	if !gs.Board.SpotUnderAttack(white_lsb, WHITE) {
 		t.Fatalf(`Spot not under attack`)
 	}
 }
@@ -313,7 +313,7 @@ func TestUnderAttackQueen2(t *testing.T) {
 	white_pieces := gs.Board.PlayerPieces(WHITE)
 	white_lsb := white_pieces.LSB()
 
-	if !gs.SpotUnderAttack(white_lsb, WHITE) {
+	if !gs.Board.SpotUnderAttack(white_lsb, WHITE) {
 		t.Fatalf(`Spot not under attack`)
 	}
 }
@@ -322,7 +322,7 @@ func TestUnderAttackQueen3(t *testing.T) {
 	white_pieces := gs.Board.PlayerPieces(WHITE)
 	white_lsb := white_pieces.LSB()
 
-	if !gs.SpotUnderAttack(white_lsb, WHITE) {
+	if !gs.Board.SpotUnderAttack(white_lsb, WHITE) {
 		t.Fatalf(`Spot not under attack`)
 	}
 }
@@ -332,7 +332,7 @@ func TestNotUnderAttackQueen(t *testing.T) {
 	white_pieces := gs.Board.PlayerPieces(WHITE)
 	white_lsb := white_pieces.LSB()
 
-	if gs.SpotUnderAttack(white_lsb, WHITE) {
+	if gs.Board.SpotUnderAttack(white_lsb, WHITE) {
 		t.Fatalf(`Spot not under attack`)
 	}
 }
@@ -342,7 +342,7 @@ func TestNotUnderAttackKnight(t *testing.T) {
 	white_pieces := gs.Board.PlayerPieces(WHITE)
 	white_lsb := white_pieces.LSB()
 
-	if !gs.SpotUnderAttack(white_lsb, WHITE) {
+	if !gs.Board.SpotUnderAttack(white_lsb, WHITE) {
 		t.Fatalf(`Spot not under attack`)
 	}
 }

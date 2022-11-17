@@ -241,3 +241,67 @@ func TestFenLoader_middlegame(t *testing.T) {
 		t.Fatalf(`gamestate.fullmove = %v. Expected %v`, gamestate.halfmove, 10)
 	}
 }
+
+func TestIntegerToAlgebraic(t *testing.T) {
+
+	var mappings = map[int]string{
+		0:  "a1",
+		1:  "b1",
+		7:  "h1",
+		8:  "a2",
+		56: "a8",
+		63: "h8",
+	}
+
+	for idx, expected := range mappings {
+		if integerToAlgebraic(idx) != expected {
+			t.Fatalf(`iTA(%v) == %v.  Expected %v`, idx, integerToAlgebraic(idx), expected)
+		}
+	}
+}
+
+func TestGetStringFromEnPassant(t *testing.T) {
+	var mappings = map[int]string{
+		0:  "a1",
+		1:  "b1",
+		7:  "h1",
+		8:  "a2",
+		56: "a8",
+		63: "h8",
+		-1: "-",
+	}
+
+	for idx, expected := range mappings {
+		if getStringFromEnPassant(idx) != expected {
+			t.Fatalf(`iTA(%v) == %v.  Expected %v`, idx, getStringFromEnPassant(idx), expected)
+		}
+	}
+}
+func TestGetStringFromMove(t *testing.T) {
+	var mappings = map[Player]string{
+		WHITE:     "w",
+		BLACK:     "b",
+		NO_PLAYER: "-",
+	}
+
+	for idx, expected := range mappings {
+		if getStringFromPlayer(idx) != expected {
+			t.Fatalf(`iTA(%v) == %v.  Expected %v`, idx, getStringFromPlayer(idx), expected)
+		}
+	}
+}
+
+func TestExportToFENGamestate(t *testing.T) {
+
+	fen := "r1bk1b1r/1p3ppp/5n2/p1P1p3/2B5/4PN2/PP3PPP/R1B1K2R b KQ - 1 10"
+
+	gamestate, err := FenLoader(fen)
+	if err != nil {
+		t.Fatalf("%v", err)
+	}
+	export := ExportToFEN(gamestate)
+
+	if export != fen {
+		t.Fatalf(`%v != %v`, export, fen)
+	}
+}

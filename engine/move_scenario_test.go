@@ -139,3 +139,54 @@ func TestScenarioTwo(t *testing.T) {
 		}
 	}
 }
+
+func TestScenarioThree(t *testing.T) {
+	e := NewEngine(OptFenString("1N5R/2p2PK1/5n1P/5N2/1PQ1P3/8/q4k1p/3r3R w - - 0 1"))
+
+	var moves = []string{
+		"Na6", "Nc6", "Nd7", "Rh7",
+		"Rg8", "Rf8", "Re8", "Rd8",
+		"Rc8", "f8=Q", "f8=R", "f8=N",
+		"f8=B", "Kf8", "Kxf6", "Kg6",
+		"h7", "Ne7", "Nd6", "Nd4", "Ne3",
+		"Ng3", "Nh4", "e5", "b5", "Qxc7",
+		"Qc6", "Qc3", "Qc1", "Qb3", "Qd3",
+		"Qb5", "Qe6", "Qd5", "Qb5",
+		"Qa6", "Rg1", "Re1", "Rxd1",
+
+		//checks
+		"Rf1", "Rxh2",
+		"Qe2", "Qf1", "Qxa2",
+		"Qc2", "Qc5", "Qd4",
+	}
+
+	var movesFound = make(map[string]bool)
+	for _, str := range moves {
+		movesFound[str] = false
+	}
+
+	allMoves := e.GetAllMoves()
+
+	lenValidMoves := 0
+
+	for _, move := range allMoves {
+		success := e.TakeMove(move)
+		if success {
+			_, ok := movesFound[move.String()]
+			if ok {
+				movesFound[move.String()] = true
+			} else {
+				t.Fatalf(`Move %v not in supplied list.`, move.String())
+			}
+			lenValidMoves += 1
+			e.UndoMove()
+		}
+
+	}
+
+	for move, result := range movesFound {
+		if !result {
+			t.Fatalf(`Did not find move %v.`, move)
+		}
+	}
+}

@@ -49,6 +49,16 @@ func getMoveFromString(move_string string) (Player, error) {
 	}
 }
 
+func getStringFromPlayer(p Player) string {
+	switch p {
+	case WHITE:
+		return "w"
+	case BLACK:
+		return "b"
+	}
+	return "-"
+}
+
 func getCastleFromString(castle_string string) (Castle, error) {
 	cs := Castle{}
 	for _, letter := range castle_string {
@@ -84,6 +94,14 @@ func getEnPassantFromString(ep_string string) (int, error) {
 	return ep, nil
 }
 
+func getStringFromEnPassant(ep_index int) string {
+	if ep_index == -1 {
+		return "-"
+	} else {
+		return integerToAlgebraic(ep_index)
+	}
+}
+
 func algebraicToInteger(algebraic string) (int, error) {
 	if len(algebraic) != 2 {
 		return -1, fmt.Errorf("invalid algebraic string: %v", algebraic)
@@ -91,9 +109,35 @@ func algebraicToInteger(algebraic string) (int, error) {
 	file := algebraic[0] - 'a'
 	rank := algebraic[1] - '1'
 
-	if file >= 7 || rank >= 7 {
+	if file > 7 || rank > 7 {
+		fmt.Println(file, rank)
 		return -1, fmt.Errorf("invalid algebraic string: %v", algebraic)
 	}
 
 	return int(file + rank*8), nil
+}
+
+func integerToAlgebraic(index int) string {
+
+	file := index & 7
+	rank := index >> 3
+
+	fileB := byte(file) + 'a'
+	rankB := byte(rank) + '1'
+
+	return fmt.Sprintf("%c%c", fileB, rankB)
+
+}
+
+func ExportToFEN(gs *Gamestate) string {
+
+	fen := fmt.Sprintf("%v %v %v %v %v %v",
+		gs.Board.ExportToFEN(),
+		getStringFromPlayer(gs.player),
+		gs.castle.ToString(),
+		getStringFromEnPassant(gs.en_passant),
+		gs.halfmove,
+		gs.fullmove)
+
+	return fen
 }

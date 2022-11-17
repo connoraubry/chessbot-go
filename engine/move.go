@@ -77,21 +77,21 @@ func (m *Move) String() string {
 	return string(string_Bytes)
 }
 
-func (gs *Gamestate) SpotUnderAttack(spot_bitboard Bitboard, player Player) bool {
+func (b *Board) SpotUnderAttack(spot_bitboard Bitboard, player Player) bool {
 
-	return gs.GetAttackingPieces(spot_bitboard, player) > 0
+	return b.GetAttackingPieces(spot_bitboard, player) > 0
 }
 
 //TODO: Add en passant possible attacking piece.
-func (gs *Gamestate) GetAttackingPieces(spot_bitboard Bitboard, player Player) Bitboard {
-	vert := GetAllVerticalMovesBitboard(gs.Board, spot_bitboard, player)
-	horiz := GetAllHorizontalMovesBitboard(gs.Board, spot_bitboard, player)
-	urd := GetAllURDiagonalMovesBitboard(gs.Board, spot_bitboard, player)
-	drd := GetAllDRDiagonalMovesBitboard(gs.Board, spot_bitboard, player)
+func (b *Board) GetAttackingPieces(spot_bitboard Bitboard, player Player) Bitboard {
+	vert := GetAllVerticalMovesBitboard(b, spot_bitboard, player)
+	horiz := GetAllHorizontalMovesBitboard(b, spot_bitboard, player)
+	urd := GetAllURDiagonalMovesBitboard(b, spot_bitboard, player)
+	drd := GetAllDRDiagonalMovesBitboard(b, spot_bitboard, player)
 	knight_attack := KNIGHT_ATTACKS[spot_bitboard]
 
 	var pawnmoves Bitboard
-	switch gs.player {
+	switch player {
 	case WHITE:
 		pawnmoves = (spot_bitboard ^ RANK_8_BB) << 8
 	case BLACK:
@@ -101,15 +101,15 @@ func (gs *Gamestate) GetAttackingPieces(spot_bitboard Bitboard, player Player) B
 	// pawnmoves := Bitboard(1 << PawnMoveOffsets[gs.player])
 	pawn_attack_bb := ((pawnmoves & ^FILE_A_BB) << 1) | ((pawnmoves & ^FILE_H_BB) >> 1)
 
-	opponent_bb := gs.Board.PlayerPieces(Enemy[player])
+	opponent_bb := b.PlayerPieces(Enemy[player])
 
-	rook_queen := (gs.Board.Rooks | gs.Board.Queens) & opponent_bb
-	bishop_queen := (gs.Board.Bishops | gs.Board.Queens) & opponent_bb
+	rook_queen := (b.Rooks | b.Queens) & opponent_bb
+	bishop_queen := (b.Bishops | b.Queens) & opponent_bb
 
 	res := ((vert | horiz) & rook_queen)
 	res |= ((urd | drd) & bishop_queen)
-	res |= (knight_attack & gs.Board.Knights & opponent_bb)
-	res |= (pawn_attack_bb & opponent_bb & gs.Board.Pawns)
+	res |= (knight_attack & b.Knights & opponent_bb)
+	res |= (pawn_attack_bb & opponent_bb & b.Pawns)
 	return res
 }
 
@@ -278,7 +278,7 @@ func (gs *Gamestate) GetAllCastleMoves() []Move {
 		}
 	}
 
-	if gs.castle.whiteKing {
+	if gs.player == BLACK {
 		if gs.castle.blackKing {
 			if emptyBoard&BOO_EMPTY_BOARD == BOO_EMPTY_BOARD {
 				m = Move{

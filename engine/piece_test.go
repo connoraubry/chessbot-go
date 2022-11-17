@@ -49,3 +49,12 @@ func TestLetterToPlayer(t *testing.T) {
 
 	}
 }
+
+func TestPieceAndPlayerToLetter(t *testing.T) {
+
+	output := pieceAndPlayertoLetter(PAWN, BLACK)
+
+	if output != 'p' {
+		t.Fatalf(`%v != %v`, 'p', output)
+	}
+}
