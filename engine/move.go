@@ -503,6 +503,31 @@ func GetAllVerticalMovesBitboard(board *Board, target Bitboard, player Player) B
 	return valid_moves_vertical
 }
 
+// func GetAllVerticalMovesBitboard2(board *Board, target Bitboard, player Player) Bitboard {
+// 	file := target.File()
+
+// 	a_file_board := uint256.NewInt(uint64((board.AllPieces() >> (file)) & FILE_A_BB))
+// 	diagonal := uint256.NewInt(uint64(MAIN_DIAGONAL))
+// 	var res uint256.Int
+// 	res.Mul(a_file_board, diagonal)
+// 	res.Rsh(&res, 8)
+
+// 	a_file_lsb := (target >> (file)) & FILE_A_BB
+
+// 	lsb_flipped := Bitrow(AFileToRank(a_file_lsb))
+
+// 	bitrow_flipped := Bitrow(res.Uint64())
+
+// 	valid_moves := Bitboard(SlidingBitrow[bitrow_flipped][lsb_flipped])
+
+// 	valid_moves_a_file := RankToAFile(valid_moves)
+
+// 	valid_moves_vertical := valid_moves_a_file << file
+// 	valid_moves_vertical &= ^board.PlayerPieces(player)
+
+// 	return valid_moves_vertical
+// }
+
 func GetAllURDiagonalMovesBitboard(board *Board, target Bitboard, player Player) Bitboard {
 	idx := target.Index()
 

@@ -236,8 +236,17 @@ func (e *Engine) Print() {
 	cgs := e.CurrentGamestate()
 	cgs.PrintBoard()
 
+	var player string
+
+	switch cgs.player {
+	case WHITE:
+		player = "WHITE"
+	case BLACK:
+		player = "BLACK"
+	}
+
 	fmt.Printf("Move: %v\nCastle: %v\nEn Passant: %v\nHalfmove: %v\nFullmove: %v\n",
-		cgs.player,
+		player,
 		cgs.castle.ToString(),
 		EPToString(cgs.en_passant),
 		cgs.halfmove,
