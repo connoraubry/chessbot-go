@@ -65,51 +65,51 @@ func TestGetRookMoves(t *testing.T) {
 	}
 }
 
-func TestGetVerticalMoves(t *testing.T) {
-	gs := NewGamestateFEN("rnbqkbnr/pppppppp/8/P7/8/8/R2PPPPP/4KBNR w KQkq - 0 1")
-	gs.Board.Rooks.PopLSB()
-	lsb := gs.Board.Rooks.LSB()
-	moves := gs.GetAllVerticalMovesBitboard(lsb)
+// func TestGetVerticalMoves(t *testing.T) {
+// 	gs := NewGamestateFEN("rnbqkbnr/pppppppp/8/P7/8/8/R2PPPPP/4KBNR w KQkq - 0 1")
+// 	gs.Board.Rooks.PopLSB()
+// 	lsb := gs.Board.Rooks.LSB()
+// 	moves := gs.GetAllVerticalMovesBitboard(lsb)
 
-	moves_length := 0
-	for moves > 0 {
-		moves.PopLSB()
-		moves_length += 1
-	}
+// 	moves_length := 0
+// 	for moves > 0 {
+// 		moves.PopLSB()
+// 		moves_length += 1
+// 	}
 
-	expected_length_moves := 3
-	if moves_length != expected_length_moves {
-		t.Fatalf(`len(moves) == %v. Expected %v`, moves_length, expected_length_moves)
-	}
-}
+// 	expected_length_moves := 3
+// 	if moves_length != expected_length_moves {
+// 		t.Fatalf(`len(moves) == %v. Expected %v`, moves_length, expected_length_moves)
+// 	}
+// }
 
-func TestGetAllURDiagonalMovesBB(t *testing.T) {
-	gs := NewGamestateFEN("b1rR4/3B2n1/1p6/2pk4/p3p1P1/4P2p/5K1P/5Q2 w - - 0 1")
+// func TestGetAllURDiagonalMovesBB(t *testing.T) {
+// 	gs := NewGamestateFEN("b1rR4/3B2n1/1p6/2pk4/p3p1P1/4P2p/5K1P/5Q2 w - - 0 1")
 
-	// all_expected := 1441174017036779520
-	expected_urd_moves := Bitboard(1152925911260069888)
+// 	// all_expected := 1441174017036779520
+// 	expected_urd_moves := Bitboard(1152925911260069888)
 
-	whiteBishosp := gs.Board.Bishops & gs.Board.PlayerPieces(WHITE)
+// 	whiteBishosp := gs.Board.Bishops & gs.Board.PlayerPieces(WHITE)
 
-	moves_bb := gs.GetAllURDiagonalMovesBitboard(whiteBishosp)
-	if moves_bb != expected_urd_moves {
-		t.Fatalf(`Moves != expected. %v != %v`, moves_bb, expected_urd_moves)
-	}
-}
+// 	moves_bb := gs.GetAllURDiagonalMovesBitboard(whiteBishosp)
+// 	if moves_bb != expected_urd_moves {
+// 		t.Fatalf(`Moves != expected. %v != %v`, moves_bb, expected_urd_moves)
+// 	}
+// }
 
-func TestGetAllDRDiagonalMovesBB(t *testing.T) {
-	gs := NewGamestateFEN("b1rR4/3B2n1/1p6/2pk4/p3p1P1/4P2p/5K1P/5Q2 w - - 0 1")
+// func TestGetAllDRDiagonalMovesBB(t *testing.T) {
+// 	gs := NewGamestateFEN("b1rR4/3B2n1/1p6/2pk4/p3p1P1/4P2p/5K1P/5Q2 w - - 0 1")
 
-	// all_expected := 1441174017036779520
-	expected_urd_moves := Bitboard(288248105776709632)
+// 	// all_expected := 1441174017036779520
+// 	expected_urd_moves := Bitboard(288248105776709632)
 
-	whiteBishosp := gs.Board.Bishops & gs.Board.PlayerPieces(WHITE)
+// 	whiteBishosp := gs.Board.Bishops & gs.Board.PlayerPieces(WHITE)
 
-	moves_bb := gs.GetAllDRDiagonalMovesBitboard(whiteBishosp)
-	if moves_bb != expected_urd_moves {
-		t.Fatalf(`Moves != expected. %v != %v`, moves_bb, expected_urd_moves)
-	}
-}
+// 	moves_bb := gs.GetAllDRDiagonalMovesBitboard(whiteBishosp)
+// 	if moves_bb != expected_urd_moves {
+// 		t.Fatalf(`Moves != expected. %v != %v`, moves_bb, expected_urd_moves)
+// 	}
+// }
 
 func TestGetBishopMoves(t *testing.T) {
 	gs := NewGamestateFEN("b1rR4/3B2n1/1p6/2pk4/p3p1P1/4P2p/5K1P/5Q2 w - - 0 1")
@@ -121,6 +121,18 @@ func TestGetBishopMoves(t *testing.T) {
 		t.Fatalf(`Moves != expected. %v != %v`, len(moves_bb), expected_length)
 	}
 }
+
+// func TestGetNewBishopMoves(t *testing.T) {
+// 	gs := NewGamestateFEN("b1rR4/3B2n1/1p6/2pk4/p3p1P1/4P2p/5K1P/5Q2 w - - 0 1")
+
+// 	// all_expected := 1441174017036779520
+// 	expected_length := 7
+// 	moves_bb := gs.NewGetAllBishopMoves()
+// 	if len(moves_bb) != expected_length {
+// 		t.Fatalf(`Moves != expected. %v != %v`, len(moves_bb), expected_length)
+// 	}
+// }
+
 func TestGetQueenMoves(t *testing.T) {
 	gs := NewGamestateFEN("b1rR4/3B2n1/1p6/2pk4/p3p1P1/4P2p/5K1P/5Q2 w - - 0 1")
 
@@ -347,6 +359,48 @@ func TestNotUnderAttackKnight(t *testing.T) {
 	}
 }
 
+func TestGetLineAttacks(t *testing.T) {
+	occupied := Bitboard(166)
+	slider := Bitboard(32)
+	mask := Bitboard(0xff)
+
+	expected := Bitboard(220)
+
+	output := GetLineAttacksHorizontal(occupied, slider, mask)
+
+	if expected != output {
+		t.Fatalf(`Expected != output. %v != %v`, expected, output)
+	}
+}
+
+func TestGetLineAttacks2(t *testing.T) {
+	occupied := Bitboard(288230376218820608)
+	slider := Bitboard(67108864)
+	mask := Bitboard(289360691352306692)
+
+	expected := Bitboard(289360691285197828)
+
+	output := GetLineAttacks(occupied, slider, mask)
+
+	if expected != output {
+		t.Fatalf(`Expected != output. %v != %v`, expected, output)
+	}
+}
+
+func TestGetLineAttacksVert(t *testing.T) {
+	occupied := Bitboard(72057594054705153)
+	slider := Bitboard(16777216)
+	mask := Bitboard(72340172838076673)
+
+	expected := Bitboard(72340172821299457)
+
+	output := GetLineAttacks(occupied, slider, mask)
+
+	if expected != output {
+		t.Fatalf(`Expected != output. %v != %v`, expected, output)
+	}
+}
+
 func BenchmarkGetPawnMoves(b *testing.B) {
 	var mvs []Move
 	gs := NewGamestateFEN(starting_fen)
@@ -375,6 +429,17 @@ func BenchmarkGetRookMoves(b *testing.B) {
 	}
 	result = mvs
 }
+
+// func BenchmarkNewGetRookMoves(b *testing.B) {
+// 	var mvs []Move
+// 	gs := NewGamestateFEN("rnbqkbn1/1pppppp1/8/7r/8/P7/1PPPPPP1/R3KBNR b KQkq - 0 1")
+
+// 	for i := 0; i < b.N; i++ {
+// 		mvs = gs.NewGetAllRookMoves()
+// 	}
+// 	result = mvs
+// }
+
 func BenchmarkGetBishopMoves(b *testing.B) {
 	var mvs []Move
 	gs := NewGamestateFEN("b1rR4/3B2n1/1p6/2pk4/p3p1P1/4P2p/5K1P/5Q2 w - - 0 1")
@@ -384,6 +449,16 @@ func BenchmarkGetBishopMoves(b *testing.B) {
 	}
 	result = mvs
 }
+
+// func BenchmarkNewGetBishopMoves(b *testing.B) {
+// 	var mvs []Move
+// 	gs := NewGamestateFEN("b1rR4/3B2n1/1p6/2pk4/p3p1P1/4P2p/5K1P/5Q2 w - - 0 1")
+
+// 	for i := 0; i < b.N; i++ {
+// 		mvs = gs.NewGetAllBishopMoves()
+// 	}
+// 	result = mvs
+// }
 
 func BenchmarkGetQueenMoves(b *testing.B) {
 	var mvs []Move

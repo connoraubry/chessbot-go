@@ -28,6 +28,7 @@ type Move struct {
 	Castle CastleOpt
 
 	en_passant_revealed int
+	en_passant          bool
 	// 	en_passant_piece_spot int
 
 	// 	check bool
@@ -78,17 +79,17 @@ func (m *Move) String() string {
 }
 
 func (b *Board) SpotUnderAttack(spot_bitboard Bitboard, player Player) bool {
-
 	return b.GetAttackingPieces(spot_bitboard, player) > 0
 }
 
 //TODO: Add en passant possible attacking piece.
 func (b *Board) GetAttackingPieces(spot_bitboard Bitboard, player Player) Bitboard {
-	vert := GetAllVerticalMovesBitboard(b, spot_bitboard, player)
-	horiz := GetAllHorizontalMovesBitboard(b, spot_bitboard, player)
-	urd := GetAllURDiagonalMovesBitboard(b, spot_bitboard, player)
-	drd := GetAllDRDiagonalMovesBitboard(b, spot_bitboard, player)
-	knight_attack := KNIGHT_ATTACKS[spot_bitboard]
+
+	straight := GetStraightMovesBitboard(b, spot_bitboard)
+	diag := GetDiagonalMovesBitboard(b, spot_bitboard)
+
+	knight_attack := NewKnightMoves[spot_bitboard.Index()]
+	king_attack := NewKingMoves[spot_bitboard.Index()]
 
 	var pawnmoves Bitboard
 	switch player {
@@ -98,7 +99,7 @@ func (b *Board) GetAttackingPieces(spot_bitboard Bitboard, player Player) Bitboa
 		pawnmoves = spot_bitboard >> 8
 	}
 
-	// pawnmoves := Bitboard(1 << PawnMoveOffsets[gs.player])
+	// pawnmoves := Bitboard(1 << PawnMoveOffsets[gs.Player])
 	pawn_attack_bb := ((pawnmoves & ^FILE_A_BB) << 1) | ((pawnmoves & ^FILE_H_BB) >> 1)
 
 	opponent_bb := b.PlayerPieces(Enemy[player])
@@ -106,10 +107,11 @@ func (b *Board) GetAttackingPieces(spot_bitboard Bitboard, player Player) Bitboa
 	rook_queen := (b.Rooks | b.Queens) & opponent_bb
 	bishop_queen := (b.Bishops | b.Queens) & opponent_bb
 
-	res := ((vert | horiz) & rook_queen)
-	res |= ((urd | drd) & bishop_queen)
+	res := (straight & rook_queen)
+	res |= (diag & bishop_queen)
 	res |= (knight_attack & b.Knights & opponent_bb)
 	res |= (pawn_attack_bb & opponent_bb & b.Pawns)
+	res |= (king_attack & opponent_bb & b.Kings)
 	return res
 }
 
@@ -119,13 +121,13 @@ func (gs *Gamestate) GetMovesFromMoveBitboard(move_bb Bitboard, lsb Bitboard, pi
 	for move_bb > 0 {
 		lsb_move := move_bb.PopLSB()
 
-		is_capture := (lsb_move & gs.Board.PlayerPieces(Enemy[gs.player])) > 0
+		is_capture := (lsb_move & gs.Board.PlayerPieces(Enemy[gs.Player])) > 0
 
 		m := Move{
 			start:               lsb.Index(),
 			end:                 lsb_move.Index(),
 			pieceName:           piece,
-			player:              gs.player,
+			player:              gs.Player,
 			capture:             is_capture,
 			en_passant_revealed: -1,
 		}
@@ -155,86 +157,46 @@ func (gs *Gamestate) GetAllPawnMoves() []Move {
 	return moves
 }
 
-func (gs *Gamestate) GetAllBishopMoves() []Move {
-	var moves []Move
-
-	bishop_bb := gs.Board.Bishops & gs.Board.PlayerPieces(gs.player)
-
-	iterate_bb := bishop_bb
-
-	for iterate_bb > 0 {
-		lsb := iterate_bb.PopLSB()
-		ur_bitboard := gs.GetAllURDiagonalMovesBitboard(lsb)
-		moves = append(moves, gs.GetMovesFromMoveBitboard(ur_bitboard, lsb, BISHOP)...)
-		dr_bitboard := gs.GetAllDRDiagonalMovesBitboard(lsb)
-		moves = append(moves, gs.GetMovesFromMoveBitboard(dr_bitboard, lsb, BISHOP)...)
-	}
-
-	return moves
-}
-
-func (gs *Gamestate) GetAllRookMoves() []Move {
-	var moves []Move
-
-	rook_bb := gs.Board.Rooks & gs.Board.PlayerPieces(gs.player)
-
-	iterate_bb := rook_bb
-
-	for iterate_bb > 0 {
-		lsb := iterate_bb.PopLSB()
-		horizontal_bitboard := gs.GetAllHorizontalMovesBitboard(lsb)
-		moves = append(moves, gs.GetMovesFromMoveBitboard(horizontal_bitboard, lsb, ROOK)...)
-		vertical_bitboard := gs.GetAllVerticalMovesBitboard(lsb)
-		moves = append(moves, gs.GetMovesFromMoveBitboard(vertical_bitboard, lsb, ROOK)...)
-	}
-
-	return moves
-}
-
 func (gs *Gamestate) GetAllQueenMoves() []Move {
 	var moves []Move
 
-	queen_bb := gs.Board.Queens & gs.Board.PlayerPieces(gs.player)
+	queen_bb := gs.Board.Queens & gs.Board.PlayerPieces(gs.Player)
 
 	iterate_bb := queen_bb
 
 	for iterate_bb > 0 {
 		lsb := iterate_bb.PopLSB()
-		horizontal_bitboard := gs.GetAllHorizontalMovesBitboard(lsb)
-		moves = append(moves, gs.GetMovesFromMoveBitboard(horizontal_bitboard, lsb, QUEEN)...)
-		vertical_bitboard := gs.GetAllVerticalMovesBitboard(lsb)
-		moves = append(moves, gs.GetMovesFromMoveBitboard(vertical_bitboard, lsb, QUEEN)...)
-		ur_bitboard := gs.GetAllURDiagonalMovesBitboard(lsb)
-		moves = append(moves, gs.GetMovesFromMoveBitboard(ur_bitboard, lsb, QUEEN)...)
-		dr_bitboard := gs.GetAllDRDiagonalMovesBitboard(lsb)
-		moves = append(moves, gs.GetMovesFromMoveBitboard(dr_bitboard, lsb, QUEEN)...)
+		attack_Bb := GetStraightMovesBitboard(gs.Board, lsb) | GetDiagonalMovesBitboard(gs.Board, lsb)
+		attack_Bb = attack_Bb &^ gs.Board.PlayerPieces(gs.Player)
+		moves = append(moves, gs.GetMovesFromMoveBitboard(attack_Bb, lsb, QUEEN)...)
 	}
 
 	return moves
 }
-func GetAllKnightMovesBitboard(board *Board, target Bitboard, player Player) Bitboard {
-	return KNIGHT_ATTACKS[target] & ^board.PlayerPieces(player)
-}
+
 func (gs *Gamestate) GetAllKnightMoves() []Move {
 	var moves []Move
-
-	knight_bb := gs.Board.Knights & gs.Board.PlayerPieces(gs.player)
+	knight_bb := gs.Board.Knights & gs.Board.PlayerPieces(gs.Player)
 
 	for knight_bb > 0 {
 		current_knight := knight_bb.PopLSB()
-		attack_spots := GetAllKnightMovesBitboard(gs.Board, current_knight, gs.player)
-
+		attack_spots := GetAllKnightMovesBitboard(gs.Board, current_knight, gs.Player)
 		moves = append(moves, gs.GetMovesFromMoveBitboard(attack_spots, current_knight, KNIGHT)...)
 
 	}
 	return moves
 }
+func GetAllKnightMovesBitboard(board *Board, target Bitboard, player Player) Bitboard {
+	idx := target.Index()
+	return NewKnightMoves[idx] & ^board.PlayerPieces(player)
+}
 
 func (gs *Gamestate) GetAllKingMoves() []Move {
 	var moves []Move
 
-	king_bb := gs.Board.Kings & gs.Board.PlayerPieces(gs.player)
-	attack_spots := KING_ATTACKS[king_bb] & ^gs.Board.PlayerPieces(gs.player)
+	king_bb := gs.Board.Kings & gs.Board.PlayerPieces(gs.Player)
+	king_idx := king_bb.Index()
+	attack_spots := NewKingMoves[king_idx] & ^gs.Board.PlayerPieces(gs.Player)
 	moves = gs.GetMovesFromMoveBitboard(attack_spots, king_bb, KING)
 
 	moves = append(moves, gs.GetAllCastleMoves()...)
@@ -247,7 +209,7 @@ func (gs *Gamestate) GetAllCastleMoves() []Move {
 	//WOO
 	emptyBoard := gs.Board.EmptySpots()
 
-	if gs.player == WHITE {
+	if gs.Player == WHITE {
 
 		if gs.castle.whiteKing {
 			if emptyBoard&WOO_EMPTY_BOARD == WOO_EMPTY_BOARD {
@@ -255,7 +217,7 @@ func (gs *Gamestate) GetAllCastleMoves() []Move {
 					start:               4,
 					end:                 6,
 					pieceName:           KING,
-					player:              gs.player,
+					player:              gs.Player,
 					Castle:              WHITEOO,
 					en_passant_revealed: -1,
 				}
@@ -268,7 +230,7 @@ func (gs *Gamestate) GetAllCastleMoves() []Move {
 					start:               4,
 					end:                 2,
 					pieceName:           KING,
-					player:              gs.player,
+					player:              gs.Player,
 					Castle:              WHITEOOO,
 					en_passant_revealed: -1,
 				}
@@ -278,14 +240,14 @@ func (gs *Gamestate) GetAllCastleMoves() []Move {
 		}
 	}
 
-	if gs.player == BLACK {
+	if gs.Player == BLACK {
 		if gs.castle.blackKing {
 			if emptyBoard&BOO_EMPTY_BOARD == BOO_EMPTY_BOARD {
 				m = Move{
 					start:               60,
 					end:                 62,
 					pieceName:           KING,
-					player:              gs.player,
+					player:              gs.Player,
 					Castle:              BLACKOO,
 					en_passant_revealed: -1,
 				}
@@ -298,7 +260,7 @@ func (gs *Gamestate) GetAllCastleMoves() []Move {
 					start:               60,
 					end:                 58,
 					pieceName:           KING,
-					player:              gs.player,
+					player:              gs.Player,
 					Castle:              BLACKOOO,
 					en_passant_revealed: -1,
 				}
@@ -315,24 +277,24 @@ func (gs *Gamestate) GetAllPawnDoubleMoves() []Move {
 	var moves []Move
 
 	//only pawns on starting rank
-	pawn_bb := gs.Board.Pawns & gs.Board.PlayerPieces(gs.player)
-	pawn_bb &= StartingPawnRank[gs.player]
+	pawn_bb := gs.Board.Pawns & gs.Board.PlayerPieces(gs.Player)
+	pawn_bb &= StartingPawnRank[gs.Player]
 
-	pawn_bb.ShiftPawns(gs.player)
+	pawn_bb.ShiftPawns(gs.Player)
 	pawn_bb &= gs.Board.EmptySpots()
 
-	pawn_bb.ShiftPawns(gs.player)
+	pawn_bb.ShiftPawns(gs.Player)
 	pawn_bb &= gs.Board.EmptySpots()
 
 	for pawn_bb > 0 {
 		lsb := pawn_bb.PopLSB()
 		idx := lsb.Index()
 		m := Move{
-			start:               idx - (PawnMoveOffsets[gs.player] << 1),
+			start:               idx - (PawnMoveOffsets[gs.Player] << 1),
 			end:                 idx,
 			pieceName:           PAWN,
-			player:              gs.player,
-			en_passant_revealed: idx - PawnMoveOffsets[gs.player],
+			player:              gs.Player,
+			en_passant_revealed: idx - PawnMoveOffsets[gs.Player],
 		}
 		moves = append(moves, m)
 	}
@@ -350,7 +312,7 @@ func (gs *Gamestate) GetPawnPromotions(start, end int, capture bool) []Move {
 			end:                 end,
 			promotion:           promotion,
 			pieceName:           PAWN,
-			player:              gs.player,
+			player:              gs.Player,
 			capture:             capture,
 			en_passant_revealed: -1,
 		}
@@ -363,23 +325,23 @@ func (gs *Gamestate) GetAllPawnOneMoves() []Move {
 
 	var moves []Move
 
-	pawn_bb := gs.Board.Pawns & gs.Board.PlayerPieces(gs.player)
-	pawn_bb.ShiftPawns(gs.player)
+	pawn_bb := gs.Board.Pawns & gs.Board.PlayerPieces(gs.Player)
+	pawn_bb.ShiftPawns(gs.Player)
 	one_move_bb := pawn_bb & gs.Board.EmptySpots()
 
 	for one_move_bb > 0 {
 		lsb := one_move_bb.PopLSB()
 		idx := lsb.Index()
-		start := idx - PawnMoveOffsets[gs.player]
+		start := idx - PawnMoveOffsets[gs.Player]
 		end := idx
-		if lsb.Rank() == BackRank[gs.player] {
+		if lsb.Rank() == BackRank[gs.Player] {
 			moves = append(moves, gs.GetPawnPromotions(start, end, false)...)
 		} else {
 			m := Move{
 				start:               start,
 				end:                 end,
 				pieceName:           PAWN,
-				player:              gs.player,
+				player:              gs.Player,
 				en_passant_revealed: -1,
 			}
 			moves = append(moves, m)
@@ -392,12 +354,13 @@ func (gs *Gamestate) GetAllPawnOneMoves() []Move {
 func (gs *Gamestate) GetAllPawnAttackMoves() []Move {
 	var moves []Move
 
-	pawn_bb := gs.Board.Pawns & gs.Board.PlayerPieces(gs.player)
+	pawn_bb := gs.Board.Pawns & gs.Board.PlayerPieces(gs.Player)
 
-	valid_attack_bb := gs.Board.PlayerPieces(Enemy[gs.player]) | gs.EnPassantBitboard()
+	valid_attack_bb := gs.Board.PlayerPieces(Enemy[gs.Player])
+	valid_ep_bb := gs.EnPassantBitboard()
 
 	var offset int
-	switch gs.player {
+	switch gs.Player {
 	case WHITE:
 		offset = NORTH
 	case BLACK:
@@ -413,19 +376,31 @@ func (gs *Gamestate) GetAllPawnAttackMoves() []Move {
 			attack_bb := Bitboard(1 << attack_spot_one)
 
 			if (attack_bb & valid_attack_bb) > 0 {
-				if attack_bb.Rank() == BackRank[gs.player] {
+				if attack_bb.Rank() == BackRank[gs.Player] {
 					moves = append(moves, gs.GetPawnPromotions(idx, attack_spot_one, true)...)
 				} else {
 					m := Move{
 						start:               idx,
 						end:                 attack_spot_one,
 						pieceName:           PAWN,
-						player:              gs.player,
+						player:              gs.Player,
 						capture:             true,
 						en_passant_revealed: -1,
 					}
 					moves = append(moves, m)
 				}
+			}
+			if (attack_bb & valid_ep_bb) > 0 {
+				m := Move{
+					start:               idx,
+					end:                 attack_spot_one,
+					pieceName:           PAWN,
+					player:              gs.Player,
+					capture:             true,
+					en_passant_revealed: -1,
+					en_passant:          true,
+				}
+				moves = append(moves, m)
 			}
 		}
 
@@ -434,20 +409,32 @@ func (gs *Gamestate) GetAllPawnAttackMoves() []Move {
 			attack_bb := Bitboard(1 << attack_spot_two)
 
 			if (attack_bb & valid_attack_bb) > 0 {
-				if attack_bb.Rank() == BackRank[gs.player] {
+				if attack_bb.Rank() == BackRank[gs.Player] {
 					moves = append(moves, gs.GetPawnPromotions(idx, attack_spot_two, true)...)
 				} else {
 					m := Move{
 						start:               idx,
 						end:                 attack_spot_two,
 						pieceName:           PAWN,
-						player:              gs.player,
+						player:              gs.Player,
 						capture:             true,
 						en_passant_revealed: -1,
 					}
 					moves = append(moves, m)
 				}
 
+			}
+			if (attack_bb & valid_ep_bb) > 0 {
+				m := Move{
+					start:               idx,
+					end:                 attack_spot_two,
+					pieceName:           PAWN,
+					player:              gs.Player,
+					capture:             true,
+					en_passant_revealed: -1,
+					en_passant:          true,
+				}
+				moves = append(moves, m)
 			}
 
 		}
@@ -457,102 +444,75 @@ func (gs *Gamestate) GetAllPawnAttackMoves() []Move {
 	return moves
 }
 
-//b only has one bit set -- the rook
-func (gs *Gamestate) GetAllHorizontalMovesBitboard(lsb Bitboard) Bitboard {
-	return GetAllHorizontalMovesBitboard(gs.Board, lsb, gs.player)
+func GetLineAttacksHorizontal(occupied, slider, mask Bitboard) Bitboard {
+	return mask & ((occupied - (slider << 1)) ^ (occupied.Reverse() - (slider.Reverse() << 1)).Reverse())
 }
 
-func (gs *Gamestate) GetAllVerticalMovesBitboard(target Bitboard) Bitboard {
-	return GetAllVerticalMovesBitboard(gs.Board, target, gs.player)
-}
-func (gs *Gamestate) GetAllURDiagonalMovesBitboard(lsb Bitboard) Bitboard {
-	return GetAllURDiagonalMovesBitboard(gs.Board, lsb, gs.player)
-}
-func (gs *Gamestate) GetAllDRDiagonalMovesBitboard(lsb Bitboard) Bitboard {
-	return GetAllDRDiagonalMovesBitboard(gs.Board, lsb, gs.player)
+func GetLineAttacks(occupied, slider, mask Bitboard) Bitboard {
+	return mask & ((occupied - (slider << 1)) ^ (occupied.VReverse() - (slider.VReverse() << 1)).VReverse())
 }
 
-func GetAllHorizontalMovesBitboard(board *Board, target Bitboard, player Player) Bitboard {
-	rank := target.Rank()
+func (gs *Gamestate) GetAllRookMoves() []Move {
+	var moves []Move
 
-	bitrow := Bitrow(board.AllPieces() >> (8 * rank))
-	lsb_bitrow := Bitrow(target >> (8 * rank))
+	rook_bb := gs.Board.Rooks & gs.Board.PlayerPieces(gs.Player)
 
-	valid_moves := SlidingBitrow[bitrow][lsb_bitrow]
-	valid_moves_bb := Bitboard(valid_moves) << (8 * rank)
-	valid_moves_bb &= ^board.PlayerPieces(player)
-	return valid_moves_bb
+	iterate_bb := rook_bb
+
+	for iterate_bb > 0 {
+		moves = append(moves, gs.GetRookMoves(iterate_bb.PopLSB())...)
+	}
+
+	return moves
 }
 
-func GetAllVerticalMovesBitboard(board *Board, target Bitboard, player Player) Bitboard {
-	file := target.File()
-
-	a_file_board := (board.AllPieces() >> (file)) & FILE_A_BB
-	a_file_lsb := (target >> (file)) & FILE_A_BB
-
-	bitrow_flipped := Bitrow(AFileToRank(a_file_board))
-	lsb_flipped := Bitrow(AFileToRank(a_file_lsb))
-
-	valid_moves := Bitboard(SlidingBitrow[bitrow_flipped][lsb_flipped])
-
-	valid_moves_a_file := RankToAFile(valid_moves)
-
-	valid_moves_vertical := valid_moves_a_file << file
-	valid_moves_vertical &= ^board.PlayerPieces(player)
-
-	return valid_moves_vertical
+func (gs *Gamestate) GetRookMoves(slider Bitboard) []Move {
+	bb := GetStraightMovesBitboard(gs.Board, slider) & ^gs.Board.PlayerPieces(gs.Player)
+	return gs.GetMovesFromMoveBitboard(bb, slider, ROOK)
 }
 
-// func GetAllVerticalMovesBitboard2(board *Board, target Bitboard, player Player) Bitboard {
-// 	file := target.File()
+func GetStraightMovesBitboard(b *Board, slider Bitboard) Bitboard {
 
-// 	a_file_board := uint256.NewInt(uint64((board.AllPieces() >> (file)) & FILE_A_BB))
-// 	diagonal := uint256.NewInt(uint64(MAIN_DIAGONAL))
-// 	var res uint256.Int
-// 	res.Mul(a_file_board, diagonal)
-// 	res.Rsh(&res, 8)
+	occupied := b.AllPieces()
+	rank := slider.Rank()
+	file := slider.File()
 
-// 	a_file_lsb := (target >> (file)) & FILE_A_BB
+	rank_mask := RANK_MASKS[rank]
+	file_mask := FILE_MASKS[file]
 
-// 	lsb_flipped := Bitrow(AFileToRank(a_file_lsb))
+	bb := GetLineAttacksHorizontal(occupied&rank_mask, slider, rank_mask) | GetLineAttacks(occupied&file_mask, slider, file_mask)
 
-// 	bitrow_flipped := Bitrow(res.Uint64())
-
-// 	valid_moves := Bitboard(SlidingBitrow[bitrow_flipped][lsb_flipped])
-
-// 	valid_moves_a_file := RankToAFile(valid_moves)
-
-// 	valid_moves_vertical := valid_moves_a_file << file
-// 	valid_moves_vertical &= ^board.PlayerPieces(player)
-
-// 	return valid_moves_vertical
-// }
-
-func GetAllURDiagonalMovesBitboard(board *Board, target Bitboard, player Player) Bitboard {
-	idx := target.Index()
-
-	urd := ConvertToURDiagonal(board.AllPieces(), idx)
-	rankBB := Bitrow(URDiagonalToRank(urd))
-
-	lsb_row := Bitrow(target >> (target.Rank() * RANK_SHIFT_1))
-	moves_bb := Bitboard(SlidingBitrow[rankBB][lsb_row])
-
-	movesUrd := RankToURDiagonal(moves_bb)
-	moves := ReverseConvertToURDiagonal(movesUrd, idx)
-
-	return moves & ^board.PlayerPieces(player)
+	return bb
 }
 
-func GetAllDRDiagonalMovesBitboard(board *Board, target Bitboard, player Player) Bitboard {
-	idx := target.Index()
-	all_pieces := board.AllPieces()
+func (gs *Gamestate) GetAllBishopMoves() []Move {
+	var moves []Move
 
-	drd := ConvertToDRDiagonal(all_pieces, idx)
-	rankBB := Bitrow(DRDiagonalToRank(drd))
-	lsb_row := Bitrow(target >> (target.Rank() * RANK_SHIFT_1))
-	moves_bb := Bitboard(SlidingBitrow[rankBB][lsb_row])
-	movesDrd := RankToDRDiagonal(moves_bb)
-	moves := ReverseConvertToDRDiagonal(movesDrd, idx)
+	bishop_bb := gs.Board.Bishops & gs.Board.PlayerPieces(gs.Player)
 
-	return moves & ^board.PlayerPieces(player)
+	iterate_bb := bishop_bb
+
+	for iterate_bb > 0 {
+		moves = append(moves, gs.GetBishopMoves(iterate_bb.PopLSB())...)
+	}
+
+	return moves
+}
+
+func (gs *Gamestate) GetBishopMoves(slider Bitboard) []Move {
+	bb := GetDiagonalMovesBitboard(gs.Board, slider) & ^gs.Board.PlayerPieces(gs.Player)
+	return gs.GetMovesFromMoveBitboard(bb, slider, BISHOP)
+}
+
+func GetDiagonalMovesBitboard(b *Board, slider Bitboard) Bitboard {
+
+	occupied := b.AllPieces()
+	rank := slider.Rank()
+	file := slider.File()
+
+	diag_mask := GetBishopDiagonal(rank, file)
+	anti_diag_mask := GetBishopAntiDiagonal(rank, file)
+
+	bb := GetLineAttacks(occupied&diag_mask, slider, diag_mask) | GetLineAttacks(occupied&anti_diag_mask, slider, anti_diag_mask)
+	return bb
 }

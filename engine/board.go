@@ -231,16 +231,16 @@ func (b *Board) loadFENPositionsBitBoard(FEN_board string) {
 
 		if number >= 0 && number < 9 {
 			file += int(number)
-		} else {
-			player := letterToPlayer(char)
-			name := letterToPieceName(char)
-
-			mask := Bitboard(1 << index)
-
-			b.AddPiece(mask, name, player)
-
-			file += 1
+			continue
 		}
+		player := letterToPlayer(char)
+		name := letterToPieceName(char)
+
+		mask := Bitboard(1 << index)
+		b.AddPiece(mask, name, player)
+
+		file += 1
+
 	}
 }
 

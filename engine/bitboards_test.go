@@ -239,3 +239,35 @@ func TestDRDiagonalAndBack3(t *testing.T) {
 // 	}
 // 	resultBitboard = output
 // }
+
+func TestReverse(t *testing.T) {
+	bb := Bitboard(538445828)
+	expected := Bitboard(68685856)
+
+	new := bb.Reverse()
+	if new != expected {
+		t.Fatalf(`Reversed bitboard != expected. %v != %v`, new, expected)
+	}
+
+	bb = Bitboard(16711680)
+	expected = Bitboard(16711680)
+	new = bb.Reverse()
+	if new != expected {
+		t.Fatalf(`Reversed bitboard != expected. %v != %v`, new, expected)
+	}
+
+	bb = Bitboard(9241386718983028737)
+	expected = Bitboard(72620827744338048)
+	new = bb.Reverse()
+	if new != expected {
+		t.Fatalf(`Reversed bitboard != expected. %v != %v`, new, expected)
+	}
+}
+func TestVReverse(t *testing.T) {
+	bb := Bitboard(2305913412452483074)
+	expected := Bitboard(144126217690284064)
+	new := bb.VReverse()
+	if new != expected {
+		t.Fatalf(`Reversed bitboard != expected. %v != %v`, new, expected)
+	}
+}

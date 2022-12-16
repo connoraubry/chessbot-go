@@ -23,7 +23,7 @@ func (cs *Castle) Copy() Castle {
 
 type Gamestate struct {
 	Board      *Board
-	player     Player
+	Player     Player
 	castle     Castle
 	en_passant int
 	halfmove   int

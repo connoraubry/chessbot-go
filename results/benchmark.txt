@@ -1,19 +1,21 @@
 go test -bench=. ./...
 ?   	chessbot-go	[no test files]
+?   	chessbot-go/automaton	[no test files]
 9 1
 224 3
 goos: darwin
 goarch: arm64
 pkg: chessbot-go/engine
-BenchmarkScenarioOne-8         	  175082	      6348 ns/op
-BenchmarkScenarioSeven-8       	  330615	      3701 ns/op
-BenchmarkGetPawnMoves-8        	 1258444	       950.8 ns/op
-BenchmarkGetAllKnightMoves-8   	 4300713	       280.3 ns/op
-BenchmarkGetRookMoves-8        	  793096	      1505 ns/op
-BenchmarkGetBishopMoves-8      	 2098303	       579.8 ns/op
-BenchmarkGetQueenMoves-8       	 1000000	      1159 ns/op
-BenchmarkGetAllMoves-8         	  235334	      5167 ns/op
+BenchmarkScenarioOne-8         	  198202	      5721 ns/op
+BenchmarkScenarioSeven-8       	  326036	      3582 ns/op
+BenchmarkGetPawnMoves-8        	 1000000	      1061 ns/op
+BenchmarkGetAllKnightMoves-8   	 3804304	       309.3 ns/op
+BenchmarkGetRookMoves-8        	  822003	      1469 ns/op
+BenchmarkGetBishopMoves-8      	 2550930	       478.4 ns/op
+BenchmarkGetQueenMoves-8       	 1417387	       882.1 ns/op
+BenchmarkGetAllMoves-8         	  250334	      4615 ns/op
 PASS
-ok  	chessbot-go/engine	11.701s
-?   	chessbot-go/game	[no test files]
+ok  	chessbot-go/engine	11.293s
+PASS
+ok  	chessbot-go/game	0.107s
 ?   	chessbot-go/perft	[no test files]

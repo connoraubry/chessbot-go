@@ -19,8 +19,8 @@ func TestNewGamestate(t *testing.T) {
 	}
 
 	expected_player := WHITE
-	if gs.player != expected_player {
-		t.Fatalf(`gs.player == %v. Expected %v`, gs.player, expected_player)
+	if gs.Player != expected_player {
+		t.Fatalf(`gs.Player == %v. Expected %v`, gs.Player, expected_player)
 	}
 
 }

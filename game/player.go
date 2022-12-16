@@ -26,18 +26,22 @@ type Player struct {
 	InputMoveChan  chan engine.Move
 	OutputMovechan chan engine.Move
 
-	QuitChan chan int
+	//flag channels
+	TakeMoveChan chan int
+	QuitChan     chan int
 }
 
-func NewPlayer(t PlayerType, e *engine.Engine, in, out chan engine.Move, quit chan int) *Player {
+func NewPlayer(t PlayerType, e *engine.Engine) *Player {
 	p := new(Player)
 	p.Type = t
 	p.Engine = e
 
-	p.InputMoveChan = in
-	p.OutputMovechan = out
+	p.InputMoveChan = make(chan engine.Move)
+	p.OutputMovechan = make(chan engine.Move)
 
-	p.QuitChan = quit
+	p.TakeMoveChan = make(chan int)
+
+	p.QuitChan = make(chan int)
 
 	return p
 }
@@ -46,6 +50,8 @@ func (p *Player) Run() {
 	var m engine.Move
 	for {
 		select {
+		case <-p.TakeMoveChan:
+			p.OutputMovechan <- p.GetMove()
 		case m = <-p.InputMoveChan:
 			p.Engine.TakeMove(m)
 			p.OutputMovechan <- p.GetMove()
@@ -78,6 +84,8 @@ func (p *Player) GetAutomatonMove() engine.Move {
 	for _, m := range moves {
 		success := p.Engine.TakeMove(m)
 		if success {
+			time.Sleep(1 * time.Second)
+			p.Engine.Print()
 			return m
 		}
 	}
@@ -87,6 +95,28 @@ func (p *Player) GetAutomatonMove() engine.Move {
 	fmt.Println(p.Engine.ExportToFEN())
 	return defaultMove
 
+}
+
+func EvaluateBoard(board engine.Board, player engine.Player) int {
+	score := 0
+	playerPieces := board.PlayerPieces(player)
+	score += 100 * CountBits(board.Pawns&playerPieces)
+	score += 300 * CountBits(board.Bishops&playerPieces)
+	score += 300 * CountBits(board.Knights&playerPieces)
+	score += 500 * CountBits(board.Rooks&playerPieces)
+	score += 800 * CountBits(board.Queens&playerPieces)
+
+	return score
+}
+
+func CountBits(bb engine.Bitboard) int {
+	res := 0
+
+	for bb > 0 {
+		bb.PopLSB()
+		res += 1
+	}
+	return res
 }
 
 func (p *Player) GetHumanMove() engine.Move {
@@ -105,6 +135,7 @@ func (p *Player) GetHumanMove() engine.Move {
 
 	for j := 0; j < 3; j++ {
 		playerInput := GetPlayerInput(stringToMove)
+
 		success := p.Engine.TakeMove(playerInput)
 		if success {
 			return playerInput

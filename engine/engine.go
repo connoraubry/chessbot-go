@@ -30,11 +30,27 @@ func NewEngine(opts ...interface{}) *Engine {
 }
 
 func (e *Engine) CurrentGamestate() *Gamestate {
+
 	return &e.GameStates[len(e.GameStates)-1]
 }
 
 func (e *Engine) GetAllMoves() []Move {
 	return e.CurrentGamestate().GetAllMoves()
+}
+
+func (e *Engine) GetValidMoves() []Move {
+	var valid_moves []Move
+
+	all_moves := e.GetAllMoves()
+
+	for _, m := range all_moves {
+		valid := e.TakeMove(m)
+		if valid {
+			valid_moves = append(valid_moves, m)
+			e.UndoMove()
+		}
+	}
+	return valid_moves
 }
 
 func (e *Engine) ExportToFEN() string {
@@ -73,7 +89,7 @@ func (e *Engine) TakeMove(m Move) bool {
 		if m.pieceName == PAWN {
 			if m.promotion != EMPTY {
 				newBoard.AddPiece(Bitboard(1<<m.end), m.promotion, m.player)
-			} else if newBoard.PlayerPieces(Enemy[m.player])&Bitboard(1<<m.end) == 0 {
+			} else if m.en_passant {
 				//en passant
 				newBoard.AddPiece(Bitboard(1<<m.end), m.pieceName, m.player)
 				pawn_offset := PawnMoveOffsets[m.player]
@@ -111,7 +127,7 @@ func (e *Engine) TakeMove(m Move) bool {
 
 	newGamestate = Gamestate{
 		Board:      newBoard,
-		player:     Enemy[currentGs.player],
+		Player:     Enemy[currentGs.Player],
 		castle:     newCastle,
 		en_passant: m.en_passant_revealed,
 		halfmove:   new_halfmove,
@@ -238,7 +254,7 @@ func (e *Engine) Print() {
 
 	var player string
 
-	switch cgs.player {
+	switch cgs.Player {
 	case WHITE:
 		player = "WHITE"
 	case BLACK:
@@ -259,4 +275,61 @@ func EPToString(ep int) string {
 	} else {
 		return indexToString(ep)
 	}
+}
+
+func (e *Engine) AllMovesToStrings(moves []Move) map[Move]string {
+	res := make(map[Move]string)
+
+	//check if in check
+	// suffix := ""
+
+	attack_spot_moves := make(map[int][]Move)
+
+	for _, m := range moves {
+		attack_spot_moves[m.end] = append(attack_spot_moves[m.end], m)
+	}
+
+	for _, m := range moves {
+
+		other_moves := attack_spot_moves[m.end]
+		if len(other_moves) == 1 {
+			res[m] = m.String()
+		} else {
+			//more than one piece attacking this spot
+			piece_occurance := make(map[PieceName]int)
+			for _, subm := range other_moves {
+				piece_occurance[subm.pieceName] += 1
+			}
+
+			if piece_occurance[m.pieceName] == 1 {
+				res[m] = m.String()
+			} else {
+				//prioritize file, rank, both
+				file_map := make(map[int]int)
+				rank_map := make(map[int]int)
+				for _, subm := range other_moves {
+					rank, file := IndexToRankFile(subm.start)
+					file_map[file] += 1
+					rank_map[rank] += 1
+				}
+
+				rank, file := IndexToRankFile(m.start)
+
+				if file_map[file] == 1 {
+					fmt.Println("file")
+				} else if rank_map[rank] == 1 {
+					fmt.Println("rank")
+				} else {
+					fmt.Println("Both")
+				}
+
+			}
+
+		}
+
+	}
+
+	fmt.Println(attack_spot_moves)
+
+	return res
 }

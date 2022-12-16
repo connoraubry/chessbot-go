@@ -28,7 +28,7 @@ func FenLoader(FEN string) (*Gamestate, error) {
 
 	gs := &Gamestate{
 		Board:      board,
-		player:     move,
+		Player:     move,
 		castle:     castle,
 		en_passant: ep,
 		halfmove:   halfmove,
@@ -133,7 +133,7 @@ func ExportToFEN(gs *Gamestate) string {
 
 	fen := fmt.Sprintf("%v %v %v %v %v %v",
 		gs.Board.ExportToFEN(),
-		getStringFromPlayer(gs.player),
+		getStringFromPlayer(gs.Player),
 		gs.castle.ToString(),
 		getStringFromEnPassant(gs.en_passant),
 		gs.halfmove,

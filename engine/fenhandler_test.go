@@ -134,8 +134,8 @@ func TestFenLoaderStart(t *testing.T) {
 	if gamestate.Board.AllPieces().LSB() != 1 {
 		t.Fatalf(`Board[0] = %v. Expected %v`, gamestate.Board.AllPieces().LSB(), 1)
 	}
-	if gamestate.player != WHITE {
-		t.Fatalf(`gamestate.move == %v. Expected %v`, gamestate.player, WHITE)
+	if gamestate.Player != WHITE {
+		t.Fatalf(`gamestate.move == %v. Expected %v`, gamestate.Player, WHITE)
 	}
 	expected_cs := Castle{true, true, true, true}
 	if gamestate.castle != expected_cs {
@@ -198,8 +198,8 @@ func TestFenLoader_e4(t *testing.T) {
 		t.Fatalf(`Board[0] = %v. Expected %v`, gamestate.Board.Pawns&Bitboard(1<<28), 1<<28)
 	}
 
-	if gamestate.player != BLACK {
-		t.Fatalf(`gamestate.move == %v. Expected %v`, gamestate.player, BLACK)
+	if gamestate.Player != BLACK {
+		t.Fatalf(`gamestate.move == %v. Expected %v`, gamestate.Player, BLACK)
 	}
 	expected_cs := Castle{true, true, true, true}
 	if gamestate.castle != expected_cs {
@@ -226,8 +226,8 @@ func TestFenLoader_middlegame(t *testing.T) {
 		t.Fatalf(`En passant = %v. Expected %v`, gamestate.en_passant, -1)
 	}
 
-	if gamestate.player != BLACK {
-		t.Fatalf(`gamestate.move == %v. Expected %v`, gamestate.player, BLACK)
+	if gamestate.Player != BLACK {
+		t.Fatalf(`gamestate.move == %v. Expected %v`, gamestate.Player, BLACK)
 	}
 	expected_cs := Castle{true, true, false, false}
 	if gamestate.castle != expected_cs {
