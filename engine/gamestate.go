@@ -1,7 +1,7 @@
 package engine
 
 import (
-	"io/ioutil"
+	"os"
 )
 
 type Castle struct {
@@ -44,7 +44,7 @@ func NewGamestateFEN(fen string) *Gamestate {
 }
 
 func readFENFile(filepath string) string {
-	bytes, err := ioutil.ReadFile(filepath)
+	bytes, err := os.ReadFile(filepath)
 	if err != nil {
 		panic(err)
 	}

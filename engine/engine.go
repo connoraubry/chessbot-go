@@ -23,7 +23,6 @@ func NewEngine(opts ...interface{}) *Engine {
 		e.GameStates = []Gamestate{*NewGamestateFEN(e.opts.FenString)}
 	} else {
 		e.GameStates = []Gamestate{*NewGamestateFile(e.opts.FenFilePath)}
-
 	}
 
 	return e

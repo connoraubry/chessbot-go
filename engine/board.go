@@ -31,12 +31,12 @@ func NewBoard(FEN_board string) *Board {
 	return b
 }
 
-func (b *Board) AllPieces() Bitboard {
-	return b.PlayerPieces(WHITE) | b.PlayerPieces(BLACK)
-}
-
 func (b *Board) EmptySpots() Bitboard {
 	return ^b.AllPieces()
+}
+
+func (b *Board) AllPieces() Bitboard {
+	return b.PlayerPieces(WHITE) | b.PlayerPieces(BLACK)
 }
 
 func (b *Board) CopyBoard() *Board {

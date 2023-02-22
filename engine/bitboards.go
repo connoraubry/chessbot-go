@@ -7,7 +7,6 @@ import (
 )
 
 type Bitboard uint64
-type Bitrow uint8
 
 /*
 PrintBitboard(b Bitboard)
@@ -46,40 +45,6 @@ func PrintBitboard(b Bitboard) {
 }
 
 /*
-PrintBitrow(b Bitrow)
-
-Prints a bitrow to the terminal.
-0's are represented as '.'
-
-Mainly used for debugging.
-*/
-func PrintBitrow(b Bitrow) {
-	bits := strconv.FormatUint(uint64(b), 2)
-	slice := strings.Split(bits, "")
-	if len(slice) < 8 {
-		prefix := make([]string, 8-len(slice))
-		for i := range prefix {
-			prefix[i] = "0"
-		}
-		slice = append(prefix, slice...)
-	}
-
-	printSlice := make([]string, 8)
-
-	for idx := 7; idx >= 0; idx-- {
-
-		val := slice[idx]
-		if val == "0" {
-			val = "."
-		}
-		printSlice[7-idx] = val
-
-	}
-	fmt.Println(strings.Join(printSlice, " "))
-
-}
-
-/*
 Bitboard.LSB() -> Bitboard
 
 Gets a bitboard of the least significant bit of B
@@ -88,6 +53,9 @@ func (b Bitboard) LSB() Bitboard {
 	return (b & -b)
 }
 
+/*
+Pops the least significant bit from a bitboard. Returns a bitboard of LSB
+*/
 func (b *Bitboard) PopLSB() Bitboard {
 	lsb := b.LSB()
 	*b = *b - lsb
@@ -147,117 +115,8 @@ func RankToAFile(b Bitboard) Bitboard {
 	}
 	return b & FILE_A_BB
 }
-func URDiagonalToRank(b Bitboard) Bitboard {
-	new_bb := (b & FILE_A_BB) |
-		(b&FILE_B_BB)>>RANK_SHIFT_1 |
-		(b&FILE_C_BB)>>RANK_SHIFT_2 |
-		(b&FILE_D_BB)>>RANK_SHIFT_3 |
-		(b&FILE_E_BB)>>RANK_SHIFT_4 |
-		(b&FILE_F_BB)>>RANK_SHIFT_5 |
-		(b&FILE_G_BB)>>RANK_SHIFT_6 |
-		(b&FILE_H_BB)>>RANK_SHIFT_7
 
-	return new_bb
-}
-
-func RankToURDiagonal(b Bitboard) Bitboard {
-	new_bb := (b & FILE_A_BB) |
-		(b&FILE_B_BB)<<RANK_SHIFT_1 |
-		(b&FILE_C_BB)<<RANK_SHIFT_2 |
-		(b&FILE_D_BB)<<RANK_SHIFT_3 |
-		(b&FILE_E_BB)<<RANK_SHIFT_4 |
-		(b&FILE_F_BB)<<RANK_SHIFT_5 |
-		(b&FILE_G_BB)<<RANK_SHIFT_6 |
-		(b&FILE_H_BB)<<RANK_SHIFT_7
-
-	return new_bb
-}
-
-func DRDiagonalToRank(b Bitboard) Bitboard {
-	new_bb := (b & FILE_H_BB) |
-		(b&FILE_G_BB)>>RANK_SHIFT_1 |
-		(b&FILE_F_BB)>>RANK_SHIFT_2 |
-		(b&FILE_E_BB)>>RANK_SHIFT_3 |
-		(b&FILE_D_BB)>>RANK_SHIFT_4 |
-		(b&FILE_C_BB)>>RANK_SHIFT_5 |
-		(b&FILE_B_BB)>>RANK_SHIFT_6 |
-		(b&FILE_A_BB)>>RANK_SHIFT_7
-
-	return new_bb
-}
-
-func RankToDRDiagonal(b Bitboard) Bitboard {
-	new_bb := (b & FILE_H_BB) |
-		(b&FILE_G_BB)<<RANK_SHIFT_1 |
-		(b&FILE_F_BB)<<RANK_SHIFT_2 |
-		(b&FILE_E_BB)<<RANK_SHIFT_3 |
-		(b&FILE_D_BB)<<RANK_SHIFT_4 |
-		(b&FILE_C_BB)<<RANK_SHIFT_5 |
-		(b&FILE_B_BB)<<RANK_SHIFT_6 |
-		(b&FILE_A_BB)<<RANK_SHIFT_7
-
-	return new_bb
-}
-
-func ConvertToURDiagonal(b Bitboard, idx int) Bitboard {
-	rank, file := IndexToRankFile(idx)
-	diag_idx := (rank - file) & 15
-	if diag_idx == 0 {
-		b = b & MAIN_DIAGONAL
-	} else if diag_idx < 8 {
-		b = b >> (RANK_SHIFT_1 * diag_idx)
-		b = b & MAIN_DIAGONAL
-	} else if diag_idx > 8 {
-		b = b << (RANK_SHIFT_1 * (16 - diag_idx))
-		b = b & MAIN_DIAGONAL
-	}
-
-	return b
-}
-func ReverseConvertToURDiagonal(b Bitboard, idx int) Bitboard {
-	rank, file := IndexToRankFile(idx)
-	diag_idx := (rank - file) & 15
-	if diag_idx == 0 {
-		b = b & MAIN_DIAGONAL
-	} else if diag_idx < 8 {
-		b = b & MaskRows[8-diag_idx]
-		b = b << (RANK_SHIFT_1 * diag_idx)
-	} else if diag_idx > 8 {
-		b = b >> (RANK_SHIFT_1 * (16 - diag_idx))
-	}
-	return b
-}
-
-func ConvertToDRDiagonal(b Bitboard, idx int) Bitboard {
-	rank, file := IndexToRankFile(idx)
-	diag_idx := (rank + file) ^ 7
-	if diag_idx == 0 {
-		b = b & DR_DIAGONAL
-	} else if diag_idx < 8 {
-		b = b << (RANK_SHIFT_1 * diag_idx)
-		b = b & DR_DIAGONAL
-	} else if diag_idx > 8 {
-		b = b >> (RANK_SHIFT_1 * (16 - diag_idx))
-		b = b & DR_DIAGONAL
-	}
-	return b
-}
-
-func ReverseConvertToDRDiagonal(b Bitboard, idx int) Bitboard {
-	rank, file := IndexToRankFile(idx)
-	diag_idx := (rank + file) ^ 7
-	if diag_idx == 0 {
-		b = b & DR_DIAGONAL
-	} else if diag_idx < 8 {
-		b = b >> (RANK_SHIFT_1 * diag_idx)
-	} else if diag_idx > 8 {
-		b = b & MaskRows[diag_idx-8]
-		b = b << (RANK_SHIFT_1 * (16 - diag_idx))
-	}
-	return b
-}
-
-//https://stackoverflow.com/questions/746171/efficient-algorithm-for-bit-reversal-from-msb-lsb-to-lsb-msb-in-c
+// https://stackoverflow.com/questions/746171/efficient-algorithm-for-bit-reversal-from-msb-lsb-to-lsb-msb-in-c
 func (b Bitboard) Reverse() Bitboard {
 	return Bitboard(
 		bitReverseLookupTable[(b>>56)&RANK_1_BB]<<56 |

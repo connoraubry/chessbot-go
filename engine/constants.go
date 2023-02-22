@@ -92,33 +92,20 @@ var BackRank = map[Player]int{
 	BLACK: 0,
 }
 
-type FileRank struct {
-	File int
-	Rank int
-}
-
-func (fr FileRank) ToIndex() int {
-	return fr.File + (fr.Rank * 8)
-}
-
 type Constants struct {
-	BitToFileRank map[Bitboard]FileRank
-	BitToIndex    map[Bitboard]int
+	BitToIndex map[Bitboard]int
 }
 
 var BoardConstants = loadConstants()
 
 func loadConstants() *Constants {
 	c := &Constants{}
-	c.BitToFileRank = make(map[Bitboard]FileRank)
 	c.BitToIndex = make(map[Bitboard]int)
 	i := Bitboard(1)
 	file := 0
 	rank := 0
 	for i > 0 {
-		fr := FileRank{file, rank}
-		c.BitToFileRank[i] = fr
-		c.BitToIndex[i] = fr.ToIndex()
+		c.BitToIndex[i] = file + (rank * 8)
 		file += 1
 		if file == 8 {
 			file = 0
@@ -148,8 +135,8 @@ func GetBishopAntiDiagonal(rank, file int) Bitboard {
 	return NewAntiDiagonals[(rank+file)^7]
 }
 
-//(rank-file) & 15
+// (rank-file) & 15
 var NewDiagonals = [16]Bitboard{9241421688590303745, 4620710844295151872, 2310355422147575808, 1155177711073755136, 577588855528488960, 288794425616760832, 144396663052566528, 72057594037927936, 0, 128, 32832, 8405024, 2151686160, 550831656968, 141012904183812, 36099303471055874}
 
-//(rank+file) ^ 7
+// (rank+file) ^ 7
 var NewAntiDiagonals = [16]Bitboard{72624976668147840, 283691315109952, 1108169199648, 4328785936, 16909320, 66052, 258, 1, 0, 9223372036854775808, 4647714815446351872, 2323998145211531264, 1161999622361579520, 580999813328273408, 290499906672525312, 145249953336295424}
