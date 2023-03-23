@@ -41,48 +41,11 @@ func indexToString(index int) string {
 	return fmt.Sprintf("%v%v", string(fileToLetter[file]), string(rankToLetter[rank]))
 }
 
-//TODO: add support for multiple pieces attacking the same spot
-func (m *Move) String() string {
-
-	switch m.Castle {
-	case WHITEOO, BLACKOO:
-		return "O-O"
-	case WHITEOOO, BLACKOOO:
-		return "O-O-O"
-	}
-
-	var string_Bytes []byte
-
-	letter := getLetter(m.pieceName)
-
-	if letter != 0 {
-		string_Bytes = append(string_Bytes, byte(letter))
-	}
-
-	if m.capture {
-
-		if m.pieceName == PAWN {
-			string_Bytes = append(string_Bytes, byte(fileToLetter[m.start&7]))
-		}
-
-		string_Bytes = append(string_Bytes, 'x')
-	}
-
-	string_Bytes = append(string_Bytes, []byte(indexToString(m.end))...)
-
-	if m.promotion != EMPTY {
-		string_Bytes = append(string_Bytes, '=', byte(getLetter(m.promotion)))
-
-	}
-
-	return string(string_Bytes)
-}
-
 func (b *Board) SpotUnderAttack(spot_bitboard Bitboard, player Player) bool {
 	return b.GetAttackingPieces(spot_bitboard, player) > 0
 }
 
-//TODO: Add en passant possible attacking piece.
+// TODO: Add en passant possible attacking piece.
 func (b *Board) GetAttackingPieces(spot_bitboard Bitboard, player Player) Bitboard {
 
 	straight := GetStraightMovesBitboard(b, spot_bitboard)
@@ -115,7 +78,7 @@ func (b *Board) GetAttackingPieces(spot_bitboard Bitboard, player Player) Bitboa
 	return res
 }
 
-//works
+// works
 func (gs *Gamestate) GetMovesFromMoveBitboard(move_bb Bitboard, lsb Bitboard, piece PieceName) []Move {
 	var moves []Move
 	for move_bb > 0 {

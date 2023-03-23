@@ -4,9 +4,8 @@ import (
 	"chessbot-go/engine"
 	"flag"
 	"fmt"
+	"log"
 	"os"
-	"os/signal"
-	"time"
 )
 
 var (
@@ -24,18 +23,24 @@ type Game struct {
 }
 
 func NewGame() *Game {
+	var err error
+
 	g := new(Game)
 
-	g.PlayerWhite = *NewPlayer(
-		AUTOMATON,
-		engine.NewEngine(engine.OptFenString(FEN_Start)),
-	)
-	g.PlayerBlack = *NewPlayer(
-		AUTOMATON,
-		engine.NewEngine(engine.OptFenString(FEN_Start)),
-	)
-
 	g.engine = *engine.NewEngine(engine.OptFenString(FEN_Start))
+
+	whiteEngine := engine.NewEngine(engine.OptFenString(FEN_Start))
+	blackEngine := engine.NewEngine(engine.OptFenString(FEN_Start))
+
+	g.PlayerWhite, err = NewPlayer(HUMAN, engine.WHITE, whiteEngine)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	g.PlayerBlack, err = NewPlayer(AUTOMATON, engine.BLACK, blackEngine)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	return g
 }
@@ -43,42 +48,42 @@ func NewGame() *Game {
 func (g *Game) Run() {
 	flag.Parse()
 
-	c := make(chan os.Signal, 1)
-	signal.Notify(c, os.Interrupt)
-	go func() {
-		<-c
-		g.Quit()
-	}()
+	// c := make(chan os.Signal, 1)
+	// signal.Notify(c, os.Interrupt)
+	// go func() {
+	// 	<-c
+	// 	g.Quit()
+	// }()
 
 	go g.PlayerWhite.Run()
 	go g.PlayerBlack.Run()
 
-	g.PlayerWhite.TakeMoveChan <- 1
-
 	g.loop()
-	time.Sleep(1 * time.Second)
 }
 
 func (g *Game) Quit() {
-	g.PlayerWhite.QuitChan <- 1
-	g.PlayerBlack.QuitChan <- 1
+	g.PlayerWhite.Quit()
+	g.PlayerBlack.Quit()
 	fmt.Println(g.moveList)
 	os.Exit(1)
 }
 
 func (g *Game) loop() {
-	m := engine.Move{}
+	var m engine.Move
 	for {
-		select {
-		case m = <-g.PlayerWhite.OutputMovechan:
+		if len(g.engine.CurrentGamestate().GetAllMoves()) == 0 {
+			g.Quit()
+		}
+		if g.engine.CurrentGamestate().Player == engine.WHITE {
+			m = g.PlayerWhite.GetMove()
 			g.moveList = append(g.moveList, m)
 			g.engine.TakeMove(m)
-
-			g.PlayerBlack.InputMoveChan <- m
-		case m = <-g.PlayerBlack.OutputMovechan:
+			g.PlayerBlack.Update(m)
+		} else {
+			m = g.PlayerBlack.GetMove()
 			g.moveList = append(g.moveList, m)
 			g.engine.TakeMove(m)
-			g.PlayerWhite.InputMoveChan <- m
+			g.PlayerWhite.Update(m)
 		}
 	}
 }
