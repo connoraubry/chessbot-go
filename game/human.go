@@ -38,28 +38,17 @@ func (h *Human) Run() {
 func (h *Human) GetMove() engine.Move {
 	moves := h.Engine.GetAllMoves()
 
-	stringToMove := make(map[string]engine.Move)
-	stMoves := make([]string, len(moves))
-	for idx, move := range moves {
-		stringToMove[move.String()] = move
-		stMoves[idx] = move.String()
-	}
-
-	h.Engine.Print()
-	fmt.Println(stMoves)
-	fmt.Println(h.Engine.ExportToFEN())
-
-	stMovesNew := engine.GetStringToMoveMap(moves)
-	fmt.Println("New st moves")
-
-	all_moves := make([]string, len(stMovesNew))
+	stringToMove := engine.GetStringToMoveMap(moves)
+	movesStringList := make([]string, len(stringToMove))
 	var i = 0
-	for k := range stMovesNew {
-		all_moves[i] = k
+	for k := range stringToMove {
+		movesStringList[i] = k
 		i++
 	}
 
-	fmt.Println(all_moves)
+	h.Engine.Print()
+	fmt.Println(movesStringList)
+	fmt.Println(h.Engine.ExportToFEN())
 
 	for j := 0; j < 3; j++ {
 		playerInput := GetPlayerInput(stringToMove)
