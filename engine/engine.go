@@ -29,7 +29,6 @@ func NewEngine(opts ...interface{}) *Engine {
 }
 
 func (e *Engine) CurrentGamestate() *Gamestate {
-
 	return &e.GameStates[len(e.GameStates)-1]
 }
 
@@ -98,9 +97,7 @@ func (e *Engine) TakeMove(m Move) bool {
 			}
 		} else {
 			newBoard.AddPiece(Bitboard(1<<m.end), m.pieceName, m.player)
-
 		}
-
 	}
 
 	//edit castling
@@ -138,46 +135,38 @@ func (e *Engine) TakeMove(m Move) bool {
 }
 
 func WhiteKingCastleValid(b *Board) bool {
-	startKing := Bitboard(16)
-	startRook := Bitboard(128)
-	if b.Kings&b.WhitePieces&startKing == 0 {
+	if b.Kings&b.WhitePieces&WHITE_KING_START == 0 {
 		return false
 	}
-	if b.Rooks&b.WhitePieces&startRook == 0 {
+	if b.Rooks&b.WhitePieces&WHITE_KING_ROOK_START == 0 {
 		return false
 	}
 	return true
 }
 func WhiteQueenCastleValid(b *Board) bool {
-	startKing := Bitboard(16)
-	startRook := Bitboard(1)
-	if b.Kings&b.WhitePieces&startKing == 0 {
+	if b.Kings&b.WhitePieces&WHITE_KING_START == 0 {
 		return false
 	}
-	if b.Rooks&b.WhitePieces&startRook == 0 {
+	if b.Rooks&b.WhitePieces&WHITE_QUEEN_ROOK_START == 0 {
 		return false
 	}
 	return true
 }
 
 func BlackKingCastleValid(b *Board) bool {
-	startKing := Bitboard(1152921504606846976)
-	startRook := Bitboard(9223372036854775808)
-	if b.Kings&b.BlackPieces&startKing == 0 {
+	if b.Kings&b.BlackPieces&BLACK_KING_START == 0 {
 		return false
 	}
-	if b.Rooks&b.BlackPieces&startRook == 0 {
+	if b.Rooks&b.BlackPieces&BLACK_KING_ROOK_START == 0 {
 		return false
 	}
 	return true
 }
 func BlackQueenCastleValid(b *Board) bool {
-	startKing := Bitboard(1152921504606846976)
-	startRook := Bitboard(72057594037927936)
-	if b.Kings&b.BlackPieces&startKing == 0 {
+	if b.Kings&b.BlackPieces&BLACK_KING_START == 0 {
 		return false
 	}
-	if b.Rooks&b.BlackPieces&startRook == 0 {
+	if b.Rooks&b.BlackPieces&BLACK_QUEEN_ROOK_START == 0 {
 		return false
 	}
 	return true
@@ -195,30 +184,30 @@ func (e *Engine) TakeCastle(m Move) (*Board, bool) {
 
 	switch m.Castle {
 	case WHITEOO:
-		startKing = Bitboard(16)
-		endKing = Bitboard(64)
-		startRook = Bitboard(128)
-		endRook = Bitboard(32)
+		startKing = WHITE_KING_START
+		endKing = WHITE_KING_OO_CASTLE
+		startRook = WHITE_KING_ROOK_START
+		endRook = WHITE_KING_ROOK_CASTLE
 		player = WHITE
 
 	case WHITEOOO:
-		startKing = Bitboard(16)
-		endKing = Bitboard(4)
-		startRook = Bitboard(1)
-		endRook = Bitboard(8)
+		startKing = WHITE_KING_START
+		endKing = WHITE_KING_OOO_CASTLE
+		startRook = WHITE_QUEEN_ROOK_START
+		endRook = WHITE_QUEEN_ROOK_CASTLE
 		player = WHITE
 
 	case BLACKOO:
-		startKing = Bitboard(1152921504606846976)
-		endKing = Bitboard(4611686018427387904)
-		startRook = Bitboard(9223372036854775808)
-		endRook = Bitboard(2305843009213693952)
+		startKing = BLACK_KING_START
+		endKing = BLACK_KING_OO_CASTLE
+		startRook = BLACK_KING_ROOK_START
+		endRook = BLACK_KING_ROOK_CASTLE
 		player = BLACK
 	case BLACKOOO:
-		startKing = Bitboard(1152921504606846976)
-		endKing = Bitboard(288230376151711744)
-		startRook = Bitboard(72057594037927936)
-		endRook = Bitboard(576460752303423488)
+		startKing = BLACK_KING_START
+		endKing = BLACK_KING_OOO_CASTLE
+		startRook = BLACK_QUEEN_ROOK_START
+		endRook = BLACK_QUEEN_ROOK_CASTLE
 		player = BLACK
 	}
 	newBoard.RemovePiece(startKing, KING, player)
@@ -274,61 +263,4 @@ func EPToString(ep int) string {
 	} else {
 		return indexToString(ep)
 	}
-}
-
-func (e *Engine) AllMovesToStrings(moves []Move) map[Move]string {
-	res := make(map[Move]string)
-
-	//check if in check
-	// suffix := ""
-
-	attack_spot_moves := make(map[int][]Move)
-
-	for _, m := range moves {
-		attack_spot_moves[m.end] = append(attack_spot_moves[m.end], m)
-	}
-
-	for _, m := range moves {
-
-		other_moves := attack_spot_moves[m.end]
-		if len(other_moves) == 1 {
-			res[m] = m.String()
-		} else {
-			//more than one piece attacking this spot
-			piece_occurance := make(map[PieceName]int)
-			for _, subm := range other_moves {
-				piece_occurance[subm.pieceName] += 1
-			}
-
-			if piece_occurance[m.pieceName] == 1 {
-				res[m] = m.String()
-			} else {
-				//prioritize file, rank, both
-				file_map := make(map[int]int)
-				rank_map := make(map[int]int)
-				for _, subm := range other_moves {
-					rank, file := IndexToRankFile(subm.start)
-					file_map[file] += 1
-					rank_map[rank] += 1
-				}
-
-				rank, file := IndexToRankFile(m.start)
-
-				if file_map[file] == 1 {
-					fmt.Println("file")
-				} else if rank_map[rank] == 1 {
-					fmt.Println("rank")
-				} else {
-					fmt.Println("Both")
-				}
-
-			}
-
-		}
-
-	}
-
-	fmt.Println(attack_spot_moves)
-
-	return res
 }

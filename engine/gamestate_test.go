@@ -2,14 +2,6 @@ package engine
 
 import "testing"
 
-func TestCastleStruct(t *testing.T) {
-	cs := Castle{}
-	cs.whiteKing = true
-	cs.blackKing = true
-	cs.whiteQueen = true
-	cs.blackQueen = true
-}
-
 func TestNewGamestate(t *testing.T) {
 	gs := NewGamestateFEN(starting_fen)
 
@@ -23,6 +15,10 @@ func TestNewGamestate(t *testing.T) {
 		t.Fatalf(`gs.Player == %v. Expected %v`, gs.Player, expected_player)
 	}
 
+	expected_en_passant := -1
+	if gs.en_passant != expected_en_passant {
+		t.Fatalf(`gs.en_passant == %v. Expected %v`, gs.en_passant, expected_en_passant)
+	}
 }
 
 func TestEnPassantBoard(t *testing.T) {

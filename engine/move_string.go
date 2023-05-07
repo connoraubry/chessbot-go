@@ -38,7 +38,7 @@ func GetMoveString(m Move, moves []Move) string {
 
 	}
 
-	return string(stringBytes)
+	return string(stringBytes) + suffix
 }
 
 func specifyWithOtherPieces(m Move, moves []Move) []byte {

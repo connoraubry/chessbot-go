@@ -6,16 +6,16 @@ go test -bench=. ./...
 goos: darwin
 goarch: arm64
 pkg: chessbot-go/engine
-BenchmarkScenarioOne-8         	  198202	      5721 ns/op
-BenchmarkScenarioSeven-8       	  326036	      3582 ns/op
-BenchmarkGetPawnMoves-8        	 1000000	      1061 ns/op
-BenchmarkGetAllKnightMoves-8   	 3804304	       309.3 ns/op
-BenchmarkGetRookMoves-8        	  822003	      1469 ns/op
-BenchmarkGetBishopMoves-8      	 2550930	       478.4 ns/op
-BenchmarkGetQueenMoves-8       	 1417387	       882.1 ns/op
-BenchmarkGetAllMoves-8         	  250334	      4615 ns/op
+BenchmarkScenarioOne-8         	  225720	      4975 ns/op
+BenchmarkScenarioSeven-8       	  396268	      2877 ns/op
+BenchmarkGetPawnMoves-8        	 1431162	       838.6 ns/op
+BenchmarkGetAllKnightMoves-8   	 4884866	       243.7 ns/op
+BenchmarkGetRookMoves-8        	  965820	      1160 ns/op
+BenchmarkGetBishopMoves-8      	 3205592	       377.4 ns/op
+BenchmarkGetQueenMoves-8       	 1736806	       664.3 ns/op
+BenchmarkGetAllMoves-8         	  327218	      3646 ns/op
 PASS
-ok  	chessbot-go/engine	11.293s
+ok  	chessbot-go/engine	11.740s
 PASS
-ok  	chessbot-go/game	0.107s
+ok  	chessbot-go/game	0.104s
 ?   	chessbot-go/perft	[no test files]

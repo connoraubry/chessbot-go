@@ -128,7 +128,7 @@ func (a *Automaton) GetNextLevel() engine.Move {
 		a.Engine.TakeMove(m)
 
 		score := a.GetNextLevelRecursive(3, !MAX)
-		fmt.Printf("%v %v\n", m.String(), score)
+		fmt.Printf("%v %v\n", engine.GetMoveString(m, moves), score)
 		if score > bestScore {
 			bestMove = m
 			bestScore = score

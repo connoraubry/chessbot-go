@@ -28,11 +28,14 @@ func TestScenarioSeven(t *testing.T) {
 	allMoves := gs.GetAllMoves()
 
 	for _, move := range allMoves {
-		_, ok := movesFound[move.String()]
+
+		movesString := GetMoveString(move, allMoves)
+
+		_, ok := movesFound[movesString]
 		if ok {
-			movesFound[move.String()] = true
+			movesFound[movesString] = true
 		} else {
-			t.Fatalf(`Move %v not in supplied list.`, move.String())
+			t.Fatalf(`Move %v not in supplied list.`, movesString)
 		}
 	}
 
@@ -89,11 +92,12 @@ func TestScenarioOne(t *testing.T) {
 	allMoves := gs.GetAllMoves()
 
 	for _, move := range allMoves {
-		_, ok := movesFound[move.String()]
+		movesString := GetMoveString(move, allMoves)
+		_, ok := movesFound[movesString]
 		if ok {
-			movesFound[move.String()] = true
+			movesFound[movesString] = true
 		} else {
-			t.Fatalf(`Move %v not in supplied list.`, move.String())
+			t.Fatalf(`Move %v not in supplied list.`, movesString)
 		}
 	}
 
@@ -125,11 +129,12 @@ func TestScenarioTwo(t *testing.T) {
 	allMoves := gs.GetAllMoves()
 
 	for _, move := range allMoves {
-		_, ok := movesFound[move.String()]
+		movesString := GetMoveString(move, allMoves)
+		_, ok := movesFound[movesString]
 		if ok {
-			movesFound[move.String()] = true
+			movesFound[movesString] = true
 		} else {
-			t.Fatalf(`Move %v not in supplied list.`, move.String())
+			t.Fatalf(`Move %v not in supplied list.`, movesString)
 		}
 	}
 
@@ -172,11 +177,12 @@ func TestScenarioThree(t *testing.T) {
 	for _, move := range allMoves {
 		success := e.TakeMove(move)
 		if success {
-			_, ok := movesFound[move.String()]
+			movesString := GetMoveString(move, allMoves)
+			_, ok := movesFound[movesString]
 			if ok {
-				movesFound[move.String()] = true
+				movesFound[movesString] = true
 			} else {
-				t.Fatalf(`Move %v not in supplied list.`, move.String())
+				t.Fatalf(`Move %v not in supplied list.`, movesString)
 			}
 			lenValidMoves += 1
 			e.UndoMove()
