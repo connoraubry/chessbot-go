@@ -23,6 +23,8 @@ type Automaton struct {
 	EvaluatedMoves map[string]int
 }
 
+const RECURSION int = 3
+
 func NewAutomaton(e *engine.Engine, color engine.Player) *Automaton {
 	a := new(Automaton)
 	a.Engine = e
@@ -127,7 +129,7 @@ func (a *Automaton) GetNextLevel() engine.Move {
 	for _, m := range moves {
 		a.Engine.TakeMove(m)
 
-		score := a.GetNextLevelRecursive(3, !MAX)
+		score := a.GetNextLevelRecursive(RECURSION, !MAX)
 		fmt.Printf("%v %v\n", a.Engine.GetMoveString(m, moves), score)
 		if score > bestScore {
 			bestMove = m

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"os/signal"
 )
 
 var (
@@ -19,7 +20,7 @@ type Game struct {
 	PlayerBlack Player
 
 	engine   engine.Engine
-	moveList []engine.Move
+	moveList []string
 }
 
 func NewGame() *Game {
@@ -48,12 +49,12 @@ func NewGame() *Game {
 func (g *Game) Run() {
 	flag.Parse()
 
-	// c := make(chan os.Signal, 1)
-	// signal.Notify(c, os.Interrupt)
-	// go func() {
-	// 	<-c
-	// 	g.Quit()
-	// }()
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt)
+	go func() {
+		<-c
+		g.Quit()
+	}()
 
 	go g.PlayerWhite.Run()
 	go g.PlayerBlack.Run()
@@ -62,10 +63,11 @@ func (g *Game) Run() {
 }
 
 func (g *Game) Quit() {
+	fmt.Println("")
 	g.PlayerWhite.Quit()
 	g.PlayerBlack.Quit()
 	fmt.Println(g.moveList)
-	os.Exit(1)
+	os.Exit(0)
 }
 
 func (g *Game) loop() {
@@ -76,12 +78,18 @@ func (g *Game) loop() {
 		}
 		if g.engine.CurrentGamestate().Player == engine.WHITE {
 			m = g.PlayerWhite.GetMove()
-			g.moveList = append(g.moveList, m)
+
+			stringMove := g.engine.GetMoveString(m, g.engine.GetValidMoves())
+			g.moveList = append(g.moveList, stringMove)
+
 			g.engine.TakeMove(m)
 			g.PlayerBlack.Update(m)
 		} else {
 			m = g.PlayerBlack.GetMove()
-			g.moveList = append(g.moveList, m)
+
+			stringMove := g.engine.GetMoveString(m, g.engine.GetValidMoves())
+			g.moveList = append(g.moveList, stringMove)
+
 			g.engine.TakeMove(m)
 			g.PlayerWhite.Update(m)
 		}
