@@ -38,7 +38,7 @@ func (h *Human) Run() {
 func (h *Human) GetMove() engine.Move {
 	moves := h.Engine.GetAllMoves()
 
-	stringToMove := engine.GetStringToMoveMap(moves)
+	stringToMove := h.Engine.GetStringToMoveMap(moves)
 	movesStringList := make([]string, len(stringToMove))
 	var i = 0
 	for k := range stringToMove {

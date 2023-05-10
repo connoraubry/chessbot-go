@@ -4,7 +4,7 @@ import (
 	"testing"
 )
 
-//for benchmarks
+// for benchmarks
 var result []Move
 
 func TestGetAllKnightMoves(t *testing.T) {
@@ -218,7 +218,7 @@ func TestMultipleSpotsUnderAttackTwo(t *testing.T) {
 
 	black_pieces := gs.Board.BlackPieces
 
-	expected_under_attack := 8
+	expected_under_attack := 9
 	actual_under_attack := 0
 	for black_pieces > 0 {
 		lsb := black_pieces.PopLSB()
@@ -398,6 +398,13 @@ func TestGetLineAttacksVert(t *testing.T) {
 
 	if expected != output {
 		t.Fatalf(`Expected != output. %v != %v`, expected, output)
+	}
+}
+
+func TestAttackedByPawns(t *testing.T) {
+	b := NewBoard("8/8/8/8/7k/1K4P1/8/8 b - - 0 1")
+	if !b.AttackdByPawns(Bitboard(2147483648), BLACK) {
+		t.Fatalf("Expected to be attacked by pawn")
 	}
 }
 

@@ -1,6 +1,8 @@
 package engine
 
-import "testing"
+import (
+	"testing"
+)
 
 func TestTakeCastleWOO(t *testing.T) {
 
@@ -74,6 +76,59 @@ func TestTakeCastleBOOO(t *testing.T) {
 	}
 	if !success {
 		t.Fatalf(`Error`)
+	}
+}
+
+func TestStalemate(t *testing.T) {
+	e := NewEngine(
+		OptFenString("4k3/8/3Q4/K7/8/8/8/5R2 b - - 0 0"),
+	)
+
+	if !e.GameInStalemate() {
+		t.Fatalf(`Expecting stalemate`)
+	}
+
+	e = NewEngine(
+		OptFenString("4kR2/8/3Q4/K7/8/8/8/8 b - - 0 0"),
+	)
+
+	if e.GameInStalemate() {
+		t.Fatalf(`Expecting player not in stalemate`)
+	}
+}
+
+func TestPlayerInCheck(t *testing.T) {
+	e := NewEngine(
+		OptFenString("4kR2/8/3Q4/K7/8/8/8/8 b - - 0 0"),
+	)
+
+	if !e.PlayerInCheck() {
+		t.Fatalf(`Expecting player in check`)
+	}
+	e = NewEngine(
+		OptFenString("4k3/8/3QR3/K7/8/8/8/8 b - - 0 0"),
+	)
+
+	if !e.PlayerInCheck() {
+		t.Fatalf(`Expecting player to be in check`)
+	}
+}
+
+func TestPlayerInCheckmate(t *testing.T) {
+	e := NewEngine(
+		OptFenString("4kR2/8/3Q4/K7/8/8/8/8 b - - 0 0"),
+	)
+
+	if !e.PlayerInCheckmate() {
+		t.Fatalf(`Expecting player in checkmate`)
+	}
+
+	e = NewEngine(
+		OptFenString("4k3/8/3QR3/K7/8/8/8/8 b - - 0 0"),
+	)
+
+	if e.PlayerInCheckmate() {
+		t.Fatalf(`Expecting player to not be in checkmate`)
 	}
 }
 

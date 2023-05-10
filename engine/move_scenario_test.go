@@ -1,6 +1,8 @@
 package engine
 
-import "testing"
+import (
+	"testing"
+)
 
 var moves []Move
 
@@ -9,10 +11,42 @@ var (
 	scenario_seven_fen = "r2qkb1r/p1pp2pp/bpB2p1n/4p3/4P2N/5P2/PPPP2PP/RNBQK2R w KQkq - 1 7"
 )
 
+func TestGetStringToMoveMap(t *testing.T) {
+	e := NewEngine(OptFenString("1N5R/2p2PK1/5n1P/5N2/1PQ1P3/8/q4k1p/3r3R w - - 0 1"))
+
+	allMoves := e.GetAllMoves()
+	allMovesStringMap := e.GetStringToMoveMap(allMoves)
+
+	var movesFound = make(map[string]bool)
+	for str := range allMovesStringMap {
+		movesFound[str] = false
+	}
+
+	for _, move := range allMoves {
+
+		movesString := e.GetMoveString(move, allMoves)
+		_, ok := movesFound[movesString]
+		if ok {
+			movesFound[movesString] = true
+		} else {
+			t.Fatalf(`Move %v not in supplied list.`, movesString)
+		}
+	}
+
+	for move, result := range movesFound {
+		if !result {
+			t.Fatalf(`Did not find move %v.`, move)
+		}
+	}
+}
+
 func TestScenarioSeven(t *testing.T) {
-	gs := NewGamestateFEN(scenario_seven_fen)
+
+	e := NewEngine(OptFenString(scenario_seven_fen))
+	gs := e.CurrentGamestate()
+
 	var moves = []string{
-		"Bxa8", "Bb7", "Bd5", "Bxd7", //technically check
+		"Bxa8", "Bb7", "Bd5", "Bxd7+", //technically check
 		"Bb5", "Ba4", "a3", "a4", "b3",
 		"b4", "c3", "c4", "d3", "d4",
 		"f4", "g3", "g4", "h3", "Ng6",
@@ -29,7 +63,7 @@ func TestScenarioSeven(t *testing.T) {
 
 	for _, move := range allMoves {
 
-		movesString := GetMoveString(move, allMoves)
+		movesString := e.GetMoveString(move, allMoves)
 
 		_, ok := movesFound[movesString]
 		if ok {
@@ -65,7 +99,8 @@ func BenchmarkScenarioSeven(b *testing.B) {
 }
 
 func TestScenarioOne(t *testing.T) {
-	gs := NewGamestateFEN("4B1r1/P1b2PpQ/3R4/3p4/1P1B4/1p3k2/1N1K4/N7 w - - 0 1")
+	e := NewEngine(OptFenString("4B1r1/P1b2PpQ/3R4/3p4/1P1B4/1p3k2/1N1K4/N7 w - - 0 1"))
+	gs := e.CurrentGamestate()
 	var moves = []string{
 		"a8=Q", "a8=B", "a8=N", "a8=R", "Bd7",
 		"Bc6", "Bb5", "Ba4", "f8=B", "f8=N",
@@ -79,8 +114,8 @@ func TestScenarioOne(t *testing.T) {
 		"Kc1", "Ke1", "Kd1",
 
 		//Next ones are checks. Should have a plus for legal moves
-		"f8=Q", "Rf6", "Qf5", "Qe4", "Qd3",
-		"Qh5", "Qh1", "Qh3", "f8=R",
+		"f8=Q+", "Rf6+", "Qf5+", "Qe4+", "Qd3+",
+		"Qh5+", "Qh1+", "Qh3+", "f8=R+",
 
 		"Ke2", "Ke3", "Kc2", // these are invalid moves, psuedo-legal
 	}
@@ -92,7 +127,7 @@ func TestScenarioOne(t *testing.T) {
 	allMoves := gs.GetAllMoves()
 
 	for _, move := range allMoves {
-		movesString := GetMoveString(move, allMoves)
+		movesString := e.GetMoveString(move, allMoves)
 		_, ok := movesFound[movesString]
 		if ok {
 			movesFound[movesString] = true
@@ -109,7 +144,8 @@ func TestScenarioOne(t *testing.T) {
 }
 
 func TestScenarioTwo(t *testing.T) {
-	gs := NewGamestateFEN("1R1b1k2/r6B/NPnp4/p2r4/8/2Pp2Pp/8/7K b - - 0 1")
+	e := NewEngine(OptFenString("1R1b1k2/r6B/NPnp4/p2r4/8/2Pp2Pp/8/7K b - - 0 1"))
+	gs := e.CurrentGamestate()
 	var moves = []string{
 		"Rxa6", "Ra8", "Ke8", "Nd4", "Ke7",
 		"Rg5", "Kg7", "Rc7", "Rh5", "Re7",
@@ -129,7 +165,7 @@ func TestScenarioTwo(t *testing.T) {
 	allMoves := gs.GetAllMoves()
 
 	for _, move := range allMoves {
-		movesString := GetMoveString(move, allMoves)
+		movesString := e.GetMoveString(move, allMoves)
 		_, ok := movesFound[movesString]
 		if ok {
 			movesFound[movesString] = true
@@ -160,9 +196,9 @@ func TestScenarioThree(t *testing.T) {
 		"Qa6", "Rg1", "Re1", "Rxd1",
 
 		//checks
-		"Rf1", "Rxh2",
-		"Qe2", "Qf1", "Qxa2",
-		"Qc2", "Qc5", "Qd4",
+		"Rf1+", "Rxh2+",
+		"Qe2+", "Qf1+", "Qxa2+",
+		"Qc2+", "Qc5+", "Qd4+",
 	}
 
 	var movesFound = make(map[string]bool)
@@ -170,22 +206,17 @@ func TestScenarioThree(t *testing.T) {
 		movesFound[str] = false
 	}
 
-	allMoves := e.GetAllMoves()
-
-	lenValidMoves := 0
+	allMoves := e.GetValidMoves()
 
 	for _, move := range allMoves {
-		success := e.TakeMove(move)
-		if success {
-			movesString := GetMoveString(move, allMoves)
-			_, ok := movesFound[movesString]
-			if ok {
-				movesFound[movesString] = true
-			} else {
-				t.Fatalf(`Move %v not in supplied list.`, movesString)
-			}
-			lenValidMoves += 1
-			e.UndoMove()
+
+		movesString := e.GetMoveString(move, allMoves)
+
+		_, ok := movesFound[movesString]
+		if ok {
+			movesFound[movesString] = true
+		} else {
+			t.Fatalf(`Move %v not in supplied list.`, movesString)
 		}
 
 	}

@@ -34,6 +34,10 @@ type Move struct {
 	// 	check bool
 }
 
+func GetAlgebraicString(m Move) string {
+	return fmt.Sprintf("%v%v", indexToString(m.start), indexToString(m.end))
+}
+
 func indexToString(index int) string {
 	rank := index >> 3
 	file := index & 7
@@ -63,7 +67,7 @@ func (b *Board) GetAttackingPieces(spot_bitboard Bitboard, player Player) Bitboa
 	}
 
 	// pawnmoves := Bitboard(1 << PawnMoveOffsets[gs.Player])
-	pawn_attack_bb := ((pawnmoves & ^FILE_A_BB) << 1) | ((pawnmoves & ^FILE_H_BB) >> 1)
+	pawn_attack_bb := ((pawnmoves & ^FILE_A_BB) >> 1) | ((pawnmoves & ^FILE_H_BB) << 1)
 
 	opponent_bb := b.PlayerPieces(Enemy[player])
 
@@ -76,6 +80,19 @@ func (b *Board) GetAttackingPieces(spot_bitboard Bitboard, player Player) Bitboa
 	res |= (pawn_attack_bb & opponent_bb & b.Pawns)
 	res |= (king_attack & opponent_bb & b.Kings)
 	return res
+}
+
+func (b *Board) AttackdByPawns(spot_bitboard Bitboard, player Player) bool {
+	var pawnmoves Bitboard
+	switch player {
+	case WHITE:
+		pawnmoves = (spot_bitboard ^ RANK_8_BB) << 8
+	case BLACK:
+		pawnmoves = spot_bitboard >> 8
+	}
+	pawn_attack_bb := ((pawnmoves & ^FILE_A_BB) >> 1) | ((pawnmoves & ^FILE_H_BB) << 1)
+	opponent_bb := b.PlayerPieces(Enemy[player])
+	return pawn_attack_bb&opponent_bb&b.Pawns > 0
 }
 
 // works

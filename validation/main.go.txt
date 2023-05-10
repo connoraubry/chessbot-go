@@ -1,0 +1,166 @@
+// package main
+
+// import (
+// 	"chessbot-go/engine"
+// 	"encoding/csv"
+// 	"flag"
+// 	"fmt"
+// 	"log"
+// 	"os"
+// )
+
+// var (
+// 	fen = flag.String("fen", "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", "FEN string")
+// 	v   = flag.Bool("verbose", false, "verbosity")
+// )
+
+// func readCsvFile(filePath string) [][]string {
+// 	f, err := os.Open(filePath)
+// 	if err != nil {
+// 		log.Fatal("Unable to read input file "+filePath, err)
+// 	}
+// 	defer f.Close()
+
+// 	csvReader := csv.NewReader(f)
+// 	records, err := csvReader.ReadAll()
+// 	if err != nil {
+// 		log.Fatal("Unable to parse file as CSV for "+filePath, err)
+// 	}
+
+// 	return records
+// }
+
+// func legal_moves() {
+
+// 	e := engine.NewEngine(engine.OptFenString("r3k2r/p1ppq1b1/bn2pnp1/3P4/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQq - 0 3"))
+
+// 	moves := e.GetValidMoves()
+// 	fmt.Println(len(moves))
+
+// 	for _, m := range moves {
+// 		if engine.GetAlgebraicString(m) == "a2a3" {
+// 			res := e.TakeMove(m)
+// 			if res {
+// 				valid_moves := e.GetValidMoves()
+// 				for _, mo := range valid_moves {
+// 					fmt.Println(e.GetMoveString(mo, valid_moves))
+// 				}
+// 				fmt.Printf("%v %v\n", engine.GetAlgebraicString(m), len(e.GetValidMoves()))
+// 				e.UndoMove()
+// 			}
+// 		}
+
+// 	}
+// 	fmt.Println(" ")
+
+// 	e = engine.NewEngine(engine.OptFenString("r3k2r/p1ppq1b1/bn2pnp1/3P4/1p2P3/P1N2Q1p/1PPBBPPP/R3K2R b KQq - 0 4"))
+
+// 	moves = e.GetValidMoves()
+// 	fmt.Println(len(moves))
+// 	fmt.Println(" ")
+// 	for _, mu := range moves {
+// 		fmt.Println(e.GetMoveString(mu, moves))
+// }
+
+// for _, m := range moves {
+// 	res := e.TakeMove(m)
+// 	if res {
+// 		fmt.Printf("%v %v\n", engine.GetAlgebraicString(m), len(e.GetValidMoves()))
+// 		e.UndoMove()
+// 	}
+
+// }
+
+// }
+
+// func main() {
+// 	flag.Parse()
+// 	legal_moves()
+// g := game.NewGame()
+// g.Run()
+
+// e := engine.NewEngine(engine.OptFenString(*fen))
+
+// moves := e.GetValidMoves()
+// fmt.Println(len(moves))
+// if *v {
+// 	fmt.Println(e.GetStringToMoveMap(moves))
+// }
+
+// count := 0
+// sum := 0
+// for _, line := range readCsvFile("tst.csv") {
+// 	count += 1
+
+// 	if count < 2 {
+
+// 		fen := line[0]
+// 		// num, err := strconv.Atoi(line[1])
+// 		// if err != nil {
+// 		// 	panic(err)
+// 		// }
+// 		e := engine.NewEngine(engine.OptFenString(fen))
+
+// 		len_valid := 0 //len(e.GetValidMoves())
+
+// 		moves := e.GetAllMoves()
+// 		for _, m := range moves {
+// 			res := e.TakeMove(m)
+// 			if res {
+// 				innerMoves := e.GetAllMoves()
+// 				for _, im := range innerMoves {
+// 					ires := e.TakeMove(im)
+// 					if ires {
+// 						len_valid += len(e.GetValidMoves())
+// 						e.UndoMove()
+// 					}
+// 				}
+// 				e.UndoMove()
+// 			}
+// 		}
+
+// 		sum += len_valid
+// 		// if num != len_valid {
+// 		// 	fmt.Println(fen)
+// 		// }
+// 	}
+// }
+// fmt.Printf("Lines analyzed: %v\n", count)
+// fmt.Printf("Sum results: %v\n", sum)
+
+// test()
+// }
+
+// func test() {
+// 	count := 0
+// 	sum := 0
+// 	for _, line := range readCsvFile("res.csv") {
+// 		count += 1
+
+// 		fen := line[0]
+// 		num, err := strconv.Atoi(line[1])
+// 		if err != nil {
+// 			panic(err)
+// 		}
+// 		e := engine.NewEngine(engine.OptFenString(fen))
+
+// 		len_valid := 0 //len(e.GetValidMoves())
+
+// 		moves := e.GetAllMoves()
+// 		for _, m := range moves {
+// 			res := e.TakeMove(m)
+// 			if res {
+// 				len_valid += len(e.GetValidMoves())
+// 				e.UndoMove()
+// 			}
+// 		}
+
+// 		sum += len_valid
+// 		if num != len_valid {
+// 			fmt.Printf("%v %v %v\n", fen, num, len_valid)
+// 		}
+
+// 	}
+// 	fmt.Printf("Lines analyzed: %v\n", count)
+// 	fmt.Printf("Sum results: %v\n", sum)
+// }

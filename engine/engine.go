@@ -51,6 +51,26 @@ func (e *Engine) GetValidMoves() []Move {
 	return valid_moves
 }
 
+func (e *Engine) GameInStalemate() bool {
+	moves := e.GetValidMoves()
+	return len(moves) == 0 && !e.PlayerInCheck()
+
+}
+
+func (e *Engine) PlayerInCheck() bool {
+
+	gs := e.CurrentGamestate()
+
+	board := gs.Board
+	player := gs.Player
+	currKing := board.PlayerPieces(player) & board.Kings
+	return board.SpotUnderAttack(currKing, player)
+}
+
+func (e *Engine) PlayerInCheckmate() bool {
+	return len(e.GetValidMoves()) == 0 && e.PlayerInCheck()
+}
+
 func (e *Engine) ExportToFEN() string {
 	return ExportToFEN(e.CurrentGamestate())
 }
@@ -104,7 +124,7 @@ func (e *Engine) TakeMove(m Move) bool {
 	newCastle.whiteKing = newCastle.whiteKing && WhiteKingCastleValid(newBoard)
 	newCastle.whiteQueen = newCastle.whiteQueen && WhiteQueenCastleValid(newBoard)
 	newCastle.blackKing = newCastle.blackKing && BlackKingCastleValid(newBoard)
-	newCastle.blackQueen = newCastle.blackKing && BlackQueenCastleValid(newBoard)
+	newCastle.blackQueen = newCastle.blackQueen && BlackQueenCastleValid(newBoard)
 
 	currKing := newBoard.PlayerPieces(m.player) & newBoard.Kings
 	if newBoard.SpotUnderAttack(currKing, m.player) {
@@ -210,6 +230,11 @@ func (e *Engine) TakeCastle(m Move) (*Board, bool) {
 		endRook = BLACK_QUEEN_ROOK_CASTLE
 		player = BLACK
 	}
+
+	if newBoard.SpotUnderAttack(startKing, player) {
+		return newBoard, false
+	}
+
 	newBoard.RemovePiece(startKing, KING, player)
 	newBoard.RemovePiece(startRook, ROOK, player)
 
@@ -221,10 +246,6 @@ func (e *Engine) TakeCastle(m Move) (*Board, bool) {
 
 	newBoard.AddPiece(endKing, KING, player)
 	newBoard.AddPiece(endRook, ROOK, player)
-
-	if newBoard.SpotUnderAttack(endKing, player) {
-		return newBoard, false
-	}
 
 	return newBoard, !newBoard.SpotUnderAttack(endKing, player)
 

@@ -1,16 +1,16 @@
 package engine
 
-func GetStringToMoveMap(moves []Move) map[string]Move {
+func (e *Engine) GetStringToMoveMap(moves []Move) map[string]Move {
 	stm := make(map[string]Move)
 
 	for _, m := range moves {
-		stm[GetMoveString(m, moves)] = m
+		stm[e.GetMoveString(m, moves)] = m
 	}
 
 	return stm
 }
 
-func GetMoveString(m Move, moves []Move) string {
+func (e *Engine) GetMoveString(m Move, moves []Move) string {
 	//TODO: find suffix
 	var suffix string = ""
 
@@ -38,7 +38,26 @@ func GetMoveString(m Move, moves []Move) string {
 
 	}
 
-	return string(stringBytes) + suffix
+	return string(stringBytes) + e.GetMoveSuffix(m)
+}
+
+func (e *Engine) GetMoveSuffix(m Move) string {
+
+	suffix := ""
+
+	res := e.TakeMove(m)
+	if res {
+
+		if e.PlayerInCheckmate() {
+			suffix = "#"
+		} else if e.PlayerInCheck() {
+			suffix = "+"
+		}
+
+		e.UndoMove()
+	}
+
+	return suffix
 }
 
 func specifyWithOtherPieces(m Move, moves []Move) []byte {
@@ -91,44 +110,4 @@ func specifyWithOtherPieces(m Move, moves []Move) []byte {
 	}
 
 	return stringBytes
-}
-
-// TODO: add support for multiple pieces attacking the same spot
-func (m *Move) String() string {
-
-	//TODO: find suffix
-	var suffix string = ""
-
-	switch m.Castle {
-	case WHITEOO, BLACKOO:
-		return "O-O" + suffix
-	case WHITEOOO, BLACKOOO:
-		return "O-O-O" + suffix
-	}
-
-	var string_Bytes []byte
-
-	letter := getLetter(m.pieceName)
-
-	if letter != 0 {
-		string_Bytes = append(string_Bytes, byte(letter))
-	}
-
-	if m.capture {
-
-		if m.pieceName == PAWN {
-			string_Bytes = append(string_Bytes, byte(fileToLetter[m.start&7]))
-		}
-
-		string_Bytes = append(string_Bytes, 'x')
-	}
-
-	string_Bytes = append(string_Bytes, []byte(indexToString(m.end))...)
-
-	if m.promotion != EMPTY {
-		string_Bytes = append(string_Bytes, '=', byte(getLetter(m.promotion)))
-
-	}
-
-	return string(string_Bytes)
 }
