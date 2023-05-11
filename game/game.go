@@ -19,6 +19,9 @@ type Game struct {
 	PlayerWhite Player
 	PlayerBlack Player
 
+	WhiteType PlayerType
+	BlackType PlayerType
+
 	engine   engine.Engine
 	moveList []string
 }
@@ -34,11 +37,13 @@ func NewGame() *Game {
 	blackEngine := engine.NewEngine(engine.OptFenString(FEN_Start))
 
 	g.PlayerWhite, err = NewPlayer(HUMAN, engine.WHITE, whiteEngine)
+	g.WhiteType = HUMAN
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	g.PlayerBlack, err = NewPlayer(AUTOMATON, engine.BLACK, blackEngine)
+	g.BlackType = AUTOMATON
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -67,6 +72,7 @@ func (g *Game) Quit() {
 	g.PlayerWhite.Quit()
 	g.PlayerBlack.Quit()
 	fmt.Println(g.moveList)
+	g.ExportToPGN("pgnfile.txt")
 	os.Exit(0)
 }
 
