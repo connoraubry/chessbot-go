@@ -31,5 +31,8 @@ func (cs *Castle) ToString() string {
 	if cs.blackQueen {
 		v = append(v, 'q')
 	}
+	if len(v) == 0 {
+		return "-"
+	}
 	return string(v)
 }

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math"
 	"math/rand"
+	"sync"
 	"time"
 )
 
@@ -20,7 +21,15 @@ type Automaton struct {
 	TakeMoveChan chan int
 	QuitChan     chan int
 
-	EvaluatedMoves map[string]int
+	EvaluatedMoves map[string]PositionEval
+
+	movesAnalyzed     int
+	movesAnalyzedLock sync.Mutex
+}
+
+type PositionEval struct {
+	score          int
+	times_accessed int
 }
 
 const RECURSION int = 3
@@ -36,7 +45,7 @@ func NewAutomaton(e *engine.Engine, color engine.Player) *Automaton {
 	a.TakeMoveChan = make(chan int)
 
 	a.QuitChan = make(chan int)
-	a.EvaluatedMoves = make(map[string]int)
+	a.EvaluatedMoves = make(map[string]PositionEval)
 	return a
 }
 func (a *Automaton) Quit() {
@@ -50,6 +59,26 @@ func (a *Automaton) Update(move engine.Move) {
 func (a *Automaton) GetMove() engine.Move {
 	a.TakeMoveChan <- 1
 	return <-a.OutputMovechan
+}
+
+func (a *Automaton) Dump() {
+	more_than_one := 0
+	total := 0
+	max := 0
+	var max_fen string
+	for fen, values := range a.EvaluatedMoves {
+		fmt.Printf("%v %v\n", fen, values)
+		if values.times_accessed > max {
+			max = values.times_accessed
+			max_fen = fen
+		}
+		if values.times_accessed > 1 {
+			more_than_one += 1
+		}
+		total += 1
+	}
+	fmt.Printf("Positions with more than one visit: %v/%v\n", more_than_one, total)
+	fmt.Printf("Max fen: %v. %v", max_fen, max)
 }
 
 /*
@@ -73,7 +102,10 @@ func (a *Automaton) Run() {
 	}
 }
 func (a *Automaton) GetNextMove() engine.Move {
-	return a.GetNextLevel()
+	a.resetMovesAnalyzed()
+	nextMove := a.GetNextLevel()
+	// fmt.Printf("Moves analyzed: %v\n", a.movesAnalyzed)
+	return nextMove
 }
 
 func (a *Automaton) GetNextMoveRandom() engine.Move {
@@ -130,7 +162,7 @@ func (a *Automaton) GetNextLevel() engine.Move {
 		a.Engine.TakeMove(m)
 
 		score := a.GetNextLevelRecursive(RECURSION, !MAX)
-		fmt.Printf("%v %v\n", a.Engine.GetMoveString(m, moves), score)
+		// fmt.Printf("%v %v\n", a.Engine.GetMoveString(m, moves), score)
 		if score > bestScore {
 			bestMove = m
 			bestScore = score
@@ -148,6 +180,7 @@ func (a *Automaton) GetNextLevel() engine.Move {
 // if no moves available, return 1000000
 func (a *Automaton) GetNextLevelRecursive(level int, MAX bool) int {
 	if level == 0 {
+		a.incrementMovesAnalyzed()
 		return a.GetBoardScore()
 	}
 	moves := a.Engine.GetValidMoves()
@@ -192,9 +225,37 @@ func (a *Automaton) isScoreBetter(new, old int, scoreSet bool) bool {
 
 // always want current player's score to be positive
 func (a *Automaton) GetBoardScore() int {
-	board := a.Engine.CurrentGamestate().Board
-	if a.Color == engine.BLACK {
-		return -EvaluateBoard(*board)
+
+	gs := a.Engine.CurrentGamestate()
+
+	fen := engine.ExportToFENNoMoves(gs)
+	eval, ok := a.EvaluatedMoves[fen]
+	if ok {
+		eval.times_accessed += 1
+		a.EvaluatedMoves[fen] = eval
+		return eval.score
 	}
-	return EvaluateBoard(*board)
+
+	newScore := 0
+
+	board := gs.Board
+	if a.Color == engine.BLACK {
+		newScore = -EvaluateBoard(*board)
+	} else {
+		newScore = EvaluateBoard(*board)
+	}
+	a.EvaluatedMoves[fen] = PositionEval{score: newScore, times_accessed: 1}
+	return newScore
+}
+
+func (a *Automaton) incrementMovesAnalyzed() {
+	a.movesAnalyzedLock.Lock()
+	a.movesAnalyzed += 1
+	a.movesAnalyzedLock.Unlock()
+}
+
+func (a *Automaton) resetMovesAnalyzed() {
+	a.movesAnalyzedLock.Lock()
+	a.movesAnalyzed += 0
+	a.movesAnalyzedLock.Unlock()
 }

@@ -141,3 +141,11 @@ func ExportToFEN(gs *Gamestate) string {
 
 	return fen
 }
+
+func ExportToFENNoMoves(gs *Gamestate) string {
+	return fmt.Sprintf("%v %v %v %v",
+		gs.Board.ExportToFEN(),
+		getStringFromPlayer(gs.Player),
+		gs.castle.ToString(),
+		getStringFromEnPassant(gs.en_passant))
+}

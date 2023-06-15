@@ -35,7 +35,7 @@ func TestCastleToString(t *testing.T) {
 		{false, false, true, true}:   "kq",
 		{false, false, true, false}:  "k",
 		{false, false, false, true}:  "q",
-		{false, false, false, false}: "",
+		{false, false, false, false}: "-",
 	}
 
 	for castle, str := range castles {

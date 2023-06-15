@@ -20,6 +20,8 @@ type Player interface {
 	Quit()
 
 	Update(engine.Move)
+
+	Dump()
 }
 
 func NewPlayer(t PlayerType, color engine.Player, e *engine.Engine) (Player, error) {

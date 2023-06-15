@@ -73,6 +73,7 @@ func (g *Game) Quit() {
 	g.PlayerBlack.Quit()
 	fmt.Println(g.moveList)
 	g.ExportToPGN("pgnfile.txt")
+	g.PlayerBlack.Dump()
 	os.Exit(0)
 }
 

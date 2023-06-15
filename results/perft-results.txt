@@ -1,13 +1,13 @@
 Running perft board 1
 Depth: 1. Legal moves: 20
-19.542µs
+21.417µs
 Depth: 2. Legal moves: 400
-99.333µs
+111.459µs
 Depth: 3. Legal moves: 8902
-2.340083ms
+2.746875ms
 Depth: 4. Legal moves: 197281
-45.655458ms
+40.999125ms
 Depth: 5. Legal moves: 4865609
-949.887958ms
+943.289583ms
 Depth: 6. Legal moves: 119060324
-24.486485708s
+24.001604417s
