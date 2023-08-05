@@ -256,10 +256,10 @@ func (e *Engine) UndoMove() {
 	}
 }
 
-func (e *Engine) Print() {
+func (e *Engine) Print(spaces int) {
 
 	cgs := e.CurrentGamestate()
-	cgs.PrintBoard()
+	boardString := cgs.Board.GetBoardVisualString()
 
 	var player string
 
@@ -270,12 +270,21 @@ func (e *Engine) Print() {
 		player = "BLACK"
 	}
 
-	fmt.Printf("Move: %v\nCastle: %v\nEn Passant: %v\nHalfmove: %v\nFullmove: %v\n",
-		player,
-		cgs.castle.ToString(),
-		EPToString(cgs.en_passant),
-		cgs.halfmove,
-		cgs.fullmove)
+	rightSpaces := "   "
+
+	boardString[5] = fmt.Sprintf("%v%vMove: %v", boardString[5], rightSpaces, player)
+	boardString[6] = fmt.Sprintf("%v%vCastle: %v", boardString[6], rightSpaces, cgs.castle.ToString())
+	boardString[7] = fmt.Sprintf("%v%vEn Passant: %v", boardString[7], rightSpaces, EPToString(cgs.en_passant))
+	boardString[8] = fmt.Sprintf("%v%vHalfmove: %v", boardString[8], rightSpaces, cgs.halfmove)
+	boardString[9] = fmt.Sprintf("%v%vFullmove: %v", boardString[9], rightSpaces, cgs.fullmove)
+
+	for _, line := range boardString {
+		fmt.Println(line)
+	}
+
+	for i := 0; i < spaces; i++ {
+		fmt.Printf("\n")
+	}
 }
 
 func EPToString(ep int) string {

@@ -1,6 +1,6 @@
 package automaton
 
-import "chessbot-go/engine"
+import "github.com/connoraubry/chessbot-go/engine"
 
 type Player struct {
 	Engine *engine.Engine

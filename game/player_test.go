@@ -1,7 +1,7 @@
 package game
 
 import (
-	"chessbot-go/engine"
+	"github.com/connoraubry/chessbot-go/engine"
 	"testing"
 )
 

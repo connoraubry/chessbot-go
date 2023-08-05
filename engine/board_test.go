@@ -225,3 +225,28 @@ func TestExportToFEN2(t *testing.T) {
 		t.Fatalf(`%v != %v`, expected, exported_b)
 	}
 }
+
+func TestGetBoardVisualString(t *testing.T) {
+	b := NewBoard("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR")
+	visual_string := b.GetBoardVisualString()
+	emptyRow := "\u00B7 \u00B7 \u00B7 \u00B7 \u00B7 \u00B7 \u00B7 \u00B7"
+
+	expected := []string{
+		"  a b c d e f g h",
+		"8 \u265C \u265E \u265D \u265B \u265A \u265D \u265E \u265C",
+		"7 \u265F \u265F \u265F \u265F \u265F \u265F \u265F \u265F",
+		"6 " + emptyRow,
+		"5 " + emptyRow,
+		"4 " + emptyRow,
+		"3 " + emptyRow,
+		"2 \u2659 \u2659 \u2659 \u2659 \u2659 \u2659 \u2659 \u2659",
+		"1 \u2656 \u2658 \u2657 \u2655 \u2654 \u2657 \u2658 \u2656",
+		"  a b c d e f g h",
+	}
+
+	for i := 0; i < len(visual_string); i++ {
+		if visual_string[i] != expected[i] {
+			t.Fatalf(`%v != %v`, visual_string[i], expected[i])
+		}
+	}
+}

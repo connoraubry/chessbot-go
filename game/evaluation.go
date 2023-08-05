@@ -1,6 +1,6 @@
 package game
 
-import "chessbot-go/engine"
+import "github.com/connoraubry/chessbot-go/engine"
 
 var pawn_table = [64]int{
 	0, 0, 0, 0, 0, 0, 0, 0,

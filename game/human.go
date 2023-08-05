@@ -2,7 +2,7 @@ package game
 
 import (
 	"bufio"
-	"chessbot-go/engine"
+	"github.com/connoraubry/chessbot-go/engine"
 	"fmt"
 	"os"
 	"strings"
@@ -48,7 +48,7 @@ func (h *Human) GetMove() engine.Move {
 		i++
 	}
 
-	h.Engine.Print()
+	h.Engine.Print(0)
 	fmt.Println(movesStringList)
 	fmt.Println(h.Engine.ExportToFEN())
 

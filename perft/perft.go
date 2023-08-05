@@ -1,7 +1,7 @@
 package main
 
 import (
-	"chessbot-go/engine"
+	"github.com/connoraubry/chessbot-go/engine"
 	"flag"
 	"fmt"
 	"time"

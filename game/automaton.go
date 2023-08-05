@@ -1,18 +1,18 @@
 package game
 
 import (
-	"chessbot-go/engine"
+	"github.com/connoraubry/chessbot-go/engine"
 	"fmt"
 	"math"
 	"math/rand"
-	"sync"
 	"time"
 )
 
 type Automaton struct {
 	Engine *engine.Engine
 
-	Color engine.Player
+	Halfmove int
+	Color    engine.Player
 
 	InputMoveChan  chan engine.Move
 	OutputMovechan chan engine.Move
@@ -24,20 +24,17 @@ type Automaton struct {
 	EvaluatedMoves map[string]PositionEval
 
 	movesAnalyzed     int
-	movesAnalyzedLock sync.Mutex
+	totalMovesAnalzed int
 }
 
-type PositionEval struct {
-	score          int
-	times_accessed int
-}
-
-const RECURSION int = 3
+const RECURSION int = 4
+const HALFMOVE_CACHE_THRESHOLD int = 2
 
 func NewAutomaton(e *engine.Engine, color engine.Player) *Automaton {
 	a := new(Automaton)
 	a.Engine = e
 	a.Color = color
+	a.Halfmove = 0
 
 	a.InputMoveChan = make(chan engine.Move)
 	a.OutputMovechan = make(chan engine.Move)
@@ -67,18 +64,32 @@ func (a *Automaton) Dump() {
 	max := 0
 	var max_fen string
 	for fen, values := range a.EvaluatedMoves {
-		fmt.Printf("%v %v\n", fen, values)
-		if values.times_accessed > max {
-			max = values.times_accessed
+		if values.timesAccessed > max {
+			max = values.timesAccessed
 			max_fen = fen
 		}
-		if values.times_accessed > 1 {
+		if values.timesAccessed > 1 {
 			more_than_one += 1
 		}
 		total += 1
 	}
 	fmt.Printf("Positions with more than one visit: %v/%v\n", more_than_one, total)
 	fmt.Printf("Max fen: %v. %v", max_fen, max)
+}
+
+func (a *Automaton) FlushEvalMoves() {
+	threshold := a.Halfmove - HALFMOVE_CACHE_THRESHOLD
+	flush_count := 0
+
+	for fen, values := range a.EvaluatedMoves {
+		if values.lastHalfmove < threshold {
+			delete(a.EvaluatedMoves, fen)
+			flush_count += 1
+		}
+	}
+
+	fmt.Printf("Flushed %v elements at halfmove %v. Cache count: %v\n", flush_count, a.Halfmove, len(a.EvaluatedMoves))
+
 }
 
 /*
@@ -89,63 +100,33 @@ a.InputMoveChan gets a move from the gamestate and updates the current gamestate
 */
 func (a *Automaton) Run() {
 	var m engine.Move
+	currHalfMove := a.Halfmove
 	for {
 		select {
 		case <-a.TakeMoveChan:
 			a.OutputMovechan <- a.GetNextMove()
+			a.Halfmove += 1
 		case m = <-a.InputMoveChan:
 			a.Engine.TakeMove(m)
+			a.Halfmove += 1
 		case <-a.QuitChan:
 			fmt.Println("quit")
 			return
 		}
+		if currHalfMove != a.Halfmove {
+			a.FlushEvalMoves()
+			currHalfMove = a.Halfmove
+		}
 	}
 }
 func (a *Automaton) GetNextMove() engine.Move {
-	a.resetMovesAnalyzed()
+	a.movesAnalyzed = 0
 	nextMove := a.GetNextLevel()
-	// fmt.Printf("Moves analyzed: %v\n", a.movesAnalyzed)
+	a.totalMovesAnalzed += a.movesAnalyzed
+
+	fmt.Printf("Moves analyzed: %v. Total moves analyzed: %v\n", a.movesAnalyzed, a.totalMovesAnalzed)
+	fmt.Printf("Taking move: %v\n", a.Engine.GetMoveString(nextMove, a.Engine.GetValidMoves()))
 	return nextMove
-}
-
-func (a *Automaton) GetNextMoveRandom() engine.Move {
-	moves := a.Engine.GetValidMoves()
-	randomIndex := rand.Intn(len(moves))
-
-	move := moves[randomIndex]
-
-	a.Engine.TakeMove(move)
-	time.Sleep(1 * time.Second)
-	a.Engine.Print()
-	return move
-}
-
-func (a *Automaton) GetNextEvaluation() engine.Move {
-
-	moves := a.Engine.GetValidMoves()
-
-	rand.Seed(time.Now().UnixNano())
-	rand.Shuffle(len(moves), func(i, j int) { moves[i], moves[j] = moves[j], moves[i] })
-
-	var bestMove engine.Move
-	var bestScore int
-	bestScoreSet := false
-
-	for _, m := range moves {
-		a.Engine.TakeMove(m)
-		newScore := a.GetBoardScore()
-		if a.isScoreBetter(newScore, bestScore, bestScoreSet) {
-			bestScore = newScore
-			bestMove = m
-			bestScoreSet = true
-		}
-		a.Engine.UndoMove()
-	}
-	a.Engine.Print()
-
-	a.Engine.TakeMove(bestMove)
-	time.Sleep(1 * time.Second)
-	return bestMove
 }
 
 func (a *Automaton) GetNextLevel() engine.Move {
@@ -161,7 +142,7 @@ func (a *Automaton) GetNextLevel() engine.Move {
 	for _, m := range moves {
 		a.Engine.TakeMove(m)
 
-		score := a.GetNextLevelRecursive(RECURSION, !MAX)
+		score := a.GetNextLevelRecursive(RECURSION, math.MinInt, math.MaxInt, !MAX)
 		// fmt.Printf("%v %v\n", a.Engine.GetMoveString(m, moves), score)
 		if score > bestScore {
 			bestMove = m
@@ -170,7 +151,7 @@ func (a *Automaton) GetNextLevel() engine.Move {
 
 		a.Engine.UndoMove()
 	}
-	a.Engine.Print()
+	a.Engine.Print(2)
 
 	a.Engine.TakeMove(bestMove)
 	return bestMove
@@ -178,9 +159,9 @@ func (a *Automaton) GetNextLevel() engine.Move {
 
 // level is depth level. When 1, find best of the available moves
 // if no moves available, return 1000000
-func (a *Automaton) GetNextLevelRecursive(level int, MAX bool) int {
+func (a *Automaton) GetNextLevelRecursive(level, alpha, beta int, MAX bool) int {
 	if level == 0 {
-		a.incrementMovesAnalyzed()
+		a.movesAnalyzed += 1
 		return a.GetBoardScore()
 	}
 	moves := a.Engine.GetValidMoves()
@@ -188,25 +169,51 @@ func (a *Automaton) GetNextLevelRecursive(level int, MAX bool) int {
 
 	rand.Shuffle(len(moves), func(i, j int) { moves[i], moves[j] = moves[j], moves[i] })
 
-	bestScore := initScore(MAX)
+	var bestScore int
 
-	for _, m := range moves {
-		a.Engine.TakeMove(m)
-		newScore := a.GetNextLevelRecursive(level-1, !MAX)
-		if MAX {
-			if newScore > bestScore {
-				bestScore = newScore
-			}
-		} else {
-			//minimizing
-			if newScore < bestScore {
-				bestScore = newScore
+	if MAX {
+		bestScore = math.MinInt
+		for _, m := range moves {
+			a.Engine.TakeMove(m)
+			newScore := a.GetNextLevelRecursive(level-1, alpha, beta, !MAX)
+			a.Engine.UndoMove()
+
+			bestScore = Max(bestScore, newScore)
+			alpha = Max(alpha, bestScore)
+			if bestScore >= beta {
+				break
 			}
 		}
-		a.Engine.UndoMove()
+	} else {
+		bestScore := math.MaxInt
+		for _, m := range moves {
+			a.Engine.TakeMove(m)
+			newScore := a.GetNextLevelRecursive(level-1, alpha, beta, !MAX)
+			a.Engine.UndoMove()
+
+			bestScore = Min(bestScore, newScore)
+			beta = Min(beta, bestScore)
+			if bestScore <= alpha {
+				break
+			}
+		}
 	}
 
 	return bestScore
+}
+
+func Max(x, y int) int {
+	if x > y {
+		return x
+	}
+	return y
+}
+
+func Min(x, y int) int {
+	if x < y {
+		return x
+	}
+	return y
 }
 
 func initScore(MAX bool) int {
@@ -214,13 +221,6 @@ func initScore(MAX bool) int {
 		return math.MinInt
 	}
 	return math.MaxInt
-
-}
-func (a *Automaton) isScoreBetter(new, old int, scoreSet bool) bool {
-	if !scoreSet {
-		return true
-	}
-	return new > old
 }
 
 // always want current player's score to be positive
@@ -231,7 +231,8 @@ func (a *Automaton) GetBoardScore() int {
 	fen := engine.ExportToFENNoMoves(gs)
 	eval, ok := a.EvaluatedMoves[fen]
 	if ok {
-		eval.times_accessed += 1
+		eval.timesAccessed += 1
+		eval.lastHalfmove = a.Halfmove
 		a.EvaluatedMoves[fen] = eval
 		return eval.score
 	}
@@ -244,18 +245,6 @@ func (a *Automaton) GetBoardScore() int {
 	} else {
 		newScore = EvaluateBoard(*board)
 	}
-	a.EvaluatedMoves[fen] = PositionEval{score: newScore, times_accessed: 1}
+	a.EvaluatedMoves[fen] = PositionEval{score: newScore, timesAccessed: 1}
 	return newScore
-}
-
-func (a *Automaton) incrementMovesAnalyzed() {
-	a.movesAnalyzedLock.Lock()
-	a.movesAnalyzed += 1
-	a.movesAnalyzedLock.Unlock()
-}
-
-func (a *Automaton) resetMovesAnalyzed() {
-	a.movesAnalyzedLock.Lock()
-	a.movesAnalyzed += 0
-	a.movesAnalyzedLock.Unlock()
 }

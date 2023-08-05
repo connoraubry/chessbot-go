@@ -1,7 +1,7 @@
 package main
 
 import (
-	"chessbot-go/game"
+	"github.com/connoraubry/chessbot-go/game"
 )
 
 var (
@@ -13,3 +13,8 @@ func main() {
 	g := game.NewGame()
 	g.Run()
 }
+
+//func main() {
+//	g := game.NewGameHumans()
+//	g.RunWithOutput()
+//}

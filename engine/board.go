@@ -245,11 +245,21 @@ func (b *Board) loadFENPositionsBitBoard(FEN_board string) {
 }
 
 func (b *Board) PrintBoard() {
+	stringBoard := b.GetBoardVisualString()
+	for _, line := range stringBoard {
+		fmt.Println(line)
+	}
+}
+func (b *Board) GetBoardVisualString() []string {
+	visString := make([]string, 10)
 	rank := 7
 	file := 0
 	bottom := "  a b c d e f g h"
-	fmt.Printf("%v\n", bottom)
+	visString[0] = bottom
+	visString[9] = bottom
+
 	row := []rune{'8'}
+	idx := 1
 	for (file >= 0) && (rank >= 0) {
 		index := file + (rank * 8)
 
@@ -264,12 +274,12 @@ func (b *Board) PrintBoard() {
 		if file > 7 {
 			rank -= 1
 			file = 0
-			fmt.Printf("%v\n", string(row))
+			visString[idx] = string(row)
+			idx += 1
 			row = []rune{rune(rank + 49)}
 		}
 	}
-	fmt.Printf("%v\n", bottom)
-
+	return visString
 }
 
 func (b *Board) GetSpotPiece(idx int) (PieceName, Player) {
