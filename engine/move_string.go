@@ -71,6 +71,10 @@ func specifyWithOtherPieces(m Move, moves []Move) []byte {
 	canSpecifyFile := true
 	canSpecifyRank := true
 
+	if m.pieceName == PAWN {
+		return stringBytes
+	}
+
 	for _, otherM := range moves {
 		//if we hit the same move, skip
 		if otherM.start == m.start {
