@@ -1,11 +1,12 @@
 package game
 
 import (
-	"github.com/connoraubry/chessbot-go/engine"
 	"fmt"
 	"math"
 	"math/rand"
 	"time"
+
+	"github.com/connoraubry/chessbot-go/engine"
 )
 
 type Automaton struct {
@@ -107,6 +108,7 @@ func (a *Automaton) Run() {
 			a.OutputMovechan <- a.GetNextMove()
 			a.Halfmove += 1
 		case m = <-a.InputMoveChan:
+
 			a.Engine.TakeMove(m)
 			a.Halfmove += 1
 		case <-a.QuitChan:
@@ -151,7 +153,7 @@ func (a *Automaton) GetNextLevel() engine.Move {
 
 		a.Engine.UndoMove()
 	}
-	a.Engine.Print(2)
+	//a.Engine.Print(2, a.LastMove)
 
 	a.Engine.TakeMove(bestMove)
 	return bestMove

@@ -11,8 +11,7 @@ func (e *Engine) GetStringToMoveMap(moves []Move) map[string]Move {
 }
 
 func (e *Engine) GetMoveString(m Move, moves []Move) string {
-	//TODO: find suffix
-	var suffix string = ""
+	var suffix string = e.GetMoveSuffix(m)
 
 	switch m.Castle {
 	case WHITEOO, BLACKOO:
@@ -38,7 +37,7 @@ func (e *Engine) GetMoveString(m Move, moves []Move) string {
 
 	}
 
-	return string(stringBytes) + e.GetMoveSuffix(m)
+	return string(stringBytes) + suffix
 }
 
 func (e *Engine) GetMoveSuffix(m Move) string {
@@ -47,16 +46,13 @@ func (e *Engine) GetMoveSuffix(m Move) string {
 
 	res := e.TakeMove(m)
 	if res {
-
 		if e.PlayerInCheckmate() {
 			suffix = "#"
 		} else if e.PlayerInCheck() {
 			suffix = "+"
 		}
-
 		e.UndoMove()
 	}
-
 	return suffix
 }
 
@@ -109,7 +105,6 @@ func specifyWithOtherPieces(m Move, moves []Move) []byte {
 			stringBytes = append(stringBytes, s[1])
 		} else {
 			stringBytes = append(stringBytes, s[0], s[1])
-
 		}
 	}
 

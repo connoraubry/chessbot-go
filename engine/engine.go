@@ -8,6 +8,7 @@ type Engine struct {
 	//'constants'
 	opts       Options
 	GameStates []Gamestate
+	MoveList   []Move
 }
 
 func NewEngine(opts ...interface{}) *Engine {
@@ -151,6 +152,7 @@ func (e *Engine) TakeMove(m Move) bool {
 	}
 
 	e.GameStates = append(e.GameStates, newGamestate)
+	e.MoveList = append(e.MoveList, m)
 	return true
 }
 
@@ -256,7 +258,7 @@ func (e *Engine) UndoMove() {
 	}
 }
 
-func (e *Engine) Print(spaces int) {
+func (e *Engine) Print(spaces int, lastMove string) {
 
 	cgs := e.CurrentGamestate()
 	boardString := cgs.Board.GetBoardVisualString()
@@ -272,7 +274,10 @@ func (e *Engine) Print(spaces int) {
 
 	rightSpaces := "   "
 
-	boardString[5] = fmt.Sprintf("%v%vMove: %v", boardString[5], rightSpaces, player)
+	if lastMove != "" {
+		boardString[4] = fmt.Sprintf("%v%vLast Move: %v", boardString[4], rightSpaces, lastMove)
+	}
+	boardString[5] = fmt.Sprintf("%v%vCurr Player: %v", boardString[5], rightSpaces, player)
 	boardString[6] = fmt.Sprintf("%v%vCastle: %v", boardString[6], rightSpaces, cgs.castle.ToString())
 	boardString[7] = fmt.Sprintf("%v%vEn Passant: %v", boardString[7], rightSpaces, EPToString(cgs.en_passant))
 	boardString[8] = fmt.Sprintf("%v%vHalfmove: %v", boardString[8], rightSpaces, cgs.halfmove)

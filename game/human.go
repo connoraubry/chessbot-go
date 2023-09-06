@@ -2,10 +2,11 @@ package game
 
 import (
 	"bufio"
-	"github.com/connoraubry/chessbot-go/engine"
 	"fmt"
 	"os"
 	"strings"
+
+	"github.com/connoraubry/chessbot-go/engine"
 )
 
 type Human struct {
@@ -17,6 +18,8 @@ type Human struct {
 	//flag channels
 	TakeMoveChan chan int
 	QuitChan     chan int
+
+	LastMove string
 }
 
 func NewHuman(e *engine.Engine) *Human {
@@ -26,6 +29,9 @@ func NewHuman(e *engine.Engine) *Human {
 }
 
 func (h *Human) Update(move engine.Move) {
+
+	h.LastMove = h.Engine.GetMoveString(move, h.Engine.GetValidMoves())
+
 	h.Engine.TakeMove(move)
 }
 
@@ -48,7 +54,7 @@ func (h *Human) GetMove() engine.Move {
 		i++
 	}
 
-	h.Engine.Print(0)
+	h.Engine.Print(0, h.LastMove)
 	fmt.Println(movesStringList)
 	fmt.Println(h.Engine.ExportToFEN())
 
