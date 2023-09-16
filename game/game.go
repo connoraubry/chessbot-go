@@ -1,13 +1,14 @@
 package game
 
 import (
-	"github.com/connoraubry/chessbot-go/engine"
 	"encoding/csv"
 	"flag"
 	"fmt"
 	"log"
 	"os"
 	"os/signal"
+
+	"github.com/connoraubry/chessbot-go/engine"
 )
 
 var (
@@ -112,7 +113,7 @@ func (g *Game) Quit() {
 	g.PlayerBlack.Quit()
 	fmt.Println(g.moveList)
 	g.ExportToPGN("pgnfile.txt")
-	g.PlayerBlack.Dump()
+	//g.PlayerBlack.Dump()
 	os.Exit(0)
 }
 

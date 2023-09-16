@@ -1,8 +1,9 @@
 package game
 
 import (
-	"github.com/connoraubry/chessbot-go/engine"
 	"fmt"
+
+	"github.com/connoraubry/chessbot-go/engine"
 )
 
 type PlayerType int
@@ -20,8 +21,6 @@ type Player interface {
 	Quit()
 
 	Update(engine.Move)
-
-	Dump()
 }
 
 func NewPlayer(t PlayerType, color engine.Player, e *engine.Engine) (Player, error) {
@@ -29,7 +28,7 @@ func NewPlayer(t PlayerType, color engine.Player, e *engine.Engine) (Player, err
 	case HUMAN:
 		return NewHuman(e), nil
 	case AUTOMATON:
-		return NewAutomaton(e, color), nil
+		return NewAutomaton(e, color, 0), nil
 	default:
 		return nil, fmt.Errorf("new player must be human or automaton")
 	}

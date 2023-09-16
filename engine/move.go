@@ -21,7 +21,7 @@ type Move struct {
 	pieceName PieceName
 	player    Player
 
-	capture bool
+	Capture bool
 
 	promotion PieceName
 
@@ -108,7 +108,7 @@ func (gs *Gamestate) GetMovesFromMoveBitboard(move_bb Bitboard, lsb Bitboard, pi
 			end:                 lsb_move.Index(),
 			pieceName:           piece,
 			player:              gs.Player,
-			capture:             is_capture,
+			Capture:             is_capture,
 			en_passant_revealed: -1,
 		}
 		moves = append(moves, m)
@@ -293,7 +293,7 @@ func (gs *Gamestate) GetPawnPromotions(start, end int, capture bool) []Move {
 			promotion:           promotion,
 			pieceName:           PAWN,
 			player:              gs.Player,
-			capture:             capture,
+			Capture:             capture,
 			en_passant_revealed: -1,
 		}
 		moves = append(moves, m)
@@ -364,7 +364,7 @@ func (gs *Gamestate) GetAllPawnAttackMoves() []Move {
 						end:                 attack_spot_one,
 						pieceName:           PAWN,
 						player:              gs.Player,
-						capture:             true,
+						Capture:             true,
 						en_passant_revealed: -1,
 					}
 					moves = append(moves, m)
@@ -376,7 +376,7 @@ func (gs *Gamestate) GetAllPawnAttackMoves() []Move {
 					end:                 attack_spot_one,
 					pieceName:           PAWN,
 					player:              gs.Player,
-					capture:             true,
+					Capture:             true,
 					en_passant_revealed: -1,
 					en_passant:          true,
 				}
@@ -397,7 +397,7 @@ func (gs *Gamestate) GetAllPawnAttackMoves() []Move {
 						end:                 attack_spot_two,
 						pieceName:           PAWN,
 						player:              gs.Player,
-						capture:             true,
+						Capture:             true,
 						en_passant_revealed: -1,
 					}
 					moves = append(moves, m)
@@ -410,7 +410,7 @@ func (gs *Gamestate) GetAllPawnAttackMoves() []Move {
 					end:                 attack_spot_two,
 					pieceName:           PAWN,
 					player:              gs.Player,
-					capture:             true,
+					Capture:             true,
 					en_passant_revealed: -1,
 					en_passant:          true,
 				}

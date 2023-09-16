@@ -134,7 +134,7 @@ func (e *Engine) TakeMove(m Move) bool {
 	new_halfmove := currentGs.halfmove + 1
 	fullmove_increment := 0
 
-	if m.capture || m.pieceName == PAWN || m.Castle != NO_CASTLE || currentGs.castle != newCastle {
+	if m.Capture || m.pieceName == PAWN || m.Castle != NO_CASTLE || currentGs.castle != newCastle {
 		new_halfmove = 0
 	}
 

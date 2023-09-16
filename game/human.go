@@ -41,8 +41,6 @@ func (h *Human) Quit() {
 func (h *Human) Run() {
 }
 
-func (h *Human) Dump() {}
-
 func (h *Human) GetMove() engine.Move {
 	moves := h.Engine.GetAllMoves()
 

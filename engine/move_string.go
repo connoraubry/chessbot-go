@@ -21,7 +21,7 @@ func (e *Engine) GetMoveString(m Move, moves []Move) string {
 	}
 	stringBytes := specifyWithOtherPieces(m, moves)
 
-	if m.capture {
+	if m.Capture {
 
 		if m.pieceName == PAWN {
 			stringBytes = append(stringBytes, byte(fileToLetter[m.start&7]))

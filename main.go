@@ -21,4 +21,5 @@ var (
 func main() {
 	g := game.NewGame()
 	g.RunWithOutput()
+
 }
