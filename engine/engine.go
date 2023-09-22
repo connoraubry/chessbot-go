@@ -91,7 +91,7 @@ func (e *Engine) TakeMove(m Move) bool {
 		if !success {
 			return false
 		}
-		switch m.player {
+		switch m.Player {
 		case WHITE:
 			newCastle.whiteKing = false
 			newCastle.whiteQueen = false
@@ -102,22 +102,22 @@ func (e *Engine) TakeMove(m Move) bool {
 	} else {
 		newBoard = e.CurrentGamestate().Board.CopyBoard()
 
-		newBoard.ClearSpot(Bitboard(1 << m.start))
-		newBoard.ClearSpot(Bitboard(1 << m.end))
+		newBoard.ClearSpot(Bitboard(1 << m.Start))
+		newBoard.ClearSpot(Bitboard(1 << m.End))
 
-		if m.pieceName == PAWN {
-			if m.promotion != EMPTY {
-				newBoard.AddPiece(Bitboard(1<<m.end), m.promotion, m.player)
-			} else if m.en_passant {
+		if m.PieceName == PAWN {
+			if m.Promotion != EMPTY {
+				newBoard.AddPiece(Bitboard(1<<m.End), m.Promotion, m.Player)
+			} else if m.En_passant {
 				//en passant
-				newBoard.AddPiece(Bitboard(1<<m.end), m.pieceName, m.player)
-				pawn_offset := PawnMoveOffsets[m.player]
-				newBoard.RemovePiece(Bitboard(1<<(m.end-pawn_offset)), PAWN, Enemy[m.player])
+				newBoard.AddPiece(Bitboard(1<<m.End), m.PieceName, m.Player)
+				pawn_offset := PawnMoveOffsets[m.Player]
+				newBoard.RemovePiece(Bitboard(1<<(m.End-pawn_offset)), PAWN, Enemy[m.Player])
 			} else {
-				newBoard.AddPiece(Bitboard(1<<m.end), m.pieceName, m.player)
+				newBoard.AddPiece(Bitboard(1<<m.End), m.PieceName, m.Player)
 			}
 		} else {
-			newBoard.AddPiece(Bitboard(1<<m.end), m.pieceName, m.player)
+			newBoard.AddPiece(Bitboard(1<<m.End), m.PieceName, m.Player)
 		}
 	}
 
@@ -127,18 +127,18 @@ func (e *Engine) TakeMove(m Move) bool {
 	newCastle.blackKing = newCastle.blackKing && BlackKingCastleValid(newBoard)
 	newCastle.blackQueen = newCastle.blackQueen && BlackQueenCastleValid(newBoard)
 
-	currKing := newBoard.PlayerPieces(m.player) & newBoard.Kings
-	if newBoard.SpotUnderAttack(currKing, m.player) {
+	currKing := newBoard.PlayerPieces(m.Player) & newBoard.Kings
+	if newBoard.SpotUnderAttack(currKing, m.Player) {
 		return false
 	}
 	new_halfmove := currentGs.halfmove + 1
 	fullmove_increment := 0
 
-	if m.Capture || m.pieceName == PAWN || m.Castle != NO_CASTLE || currentGs.castle != newCastle {
+	if m.Capture || m.PieceName == PAWN || m.Castle != NO_CASTLE || currentGs.castle != newCastle {
 		new_halfmove = 0
 	}
 
-	if m.player == BLACK {
+	if m.Player == BLACK {
 		fullmove_increment = 1
 	}
 
@@ -146,7 +146,7 @@ func (e *Engine) TakeMove(m Move) bool {
 		Board:      newBoard,
 		Player:     Enemy[currentGs.Player],
 		castle:     newCastle,
-		en_passant: m.en_passant_revealed,
+		en_passant: m.En_passant_revealed,
 		halfmove:   new_halfmove,
 		fullmove:   currentGs.fullmove + fullmove_increment,
 	}

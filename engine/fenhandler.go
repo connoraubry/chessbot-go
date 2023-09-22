@@ -21,10 +21,17 @@ func FenLoader(FEN string) (*Gamestate, error) {
 	handle(c_err)
 	ep, ep_err := getEnPassantFromString(s[3])
 	handle(ep_err)
-	halfmove, h_err := strconv.Atoi(s[4])
-	handle(h_err)
-	fullmove, f_err := strconv.Atoi(s[5])
-	handle(f_err)
+
+	halfmove := 0
+	fullmove := 0
+
+	if len(s) > 4 {
+		var h_err, f_err error
+		halfmove, h_err = strconv.Atoi(s[4])
+		handle(h_err)
+		fullmove, f_err = strconv.Atoi(s[5])
+		handle(f_err)
+	}
 
 	gs := &Gamestate{
 		Board:      board,

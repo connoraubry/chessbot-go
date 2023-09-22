@@ -23,17 +23,17 @@ func (e *Engine) GetMoveString(m Move, moves []Move) string {
 
 	if m.Capture {
 
-		if m.pieceName == PAWN {
-			stringBytes = append(stringBytes, byte(fileToLetter[m.start&7]))
+		if m.PieceName == PAWN {
+			stringBytes = append(stringBytes, byte(fileToLetter[m.Start&7]))
 		}
 
 		stringBytes = append(stringBytes, 'x')
 	}
 
-	stringBytes = append(stringBytes, []byte(indexToString(m.end))...)
+	stringBytes = append(stringBytes, []byte(indexToString(m.End))...)
 
-	if m.promotion != EMPTY {
-		stringBytes = append(stringBytes, '=', byte(getLetter(m.promotion)))
+	if m.Promotion != EMPTY {
+		stringBytes = append(stringBytes, '=', byte(getLetter(m.Promotion)))
 
 	}
 
@@ -58,7 +58,7 @@ func (e *Engine) GetMoveSuffix(m Move) string {
 
 func specifyWithOtherPieces(m Move, moves []Move) []byte {
 	var stringBytes []byte
-	letter := getLetter(m.pieceName)
+	letter := getLetter(m.PieceName)
 
 	if letter != 0 {
 		stringBytes = append(stringBytes, byte(letter))
@@ -67,27 +67,27 @@ func specifyWithOtherPieces(m Move, moves []Move) []byte {
 	canSpecifyFile := true
 	canSpecifyRank := true
 
-	if m.pieceName == PAWN {
+	if m.PieceName == PAWN {
 		return stringBytes
 	}
 
 	for _, otherM := range moves {
 		//if we hit the same move, skip
-		if otherM.start == m.start {
+		if otherM.Start == m.Start {
 			continue
 		}
 		//if the piece isn't moving to the same spot, we don't care
-		if otherM.end != m.end {
+		if otherM.End != m.End {
 			continue
 		}
 		// if it's a different piece type, skip
-		if otherM.pieceName != m.pieceName {
+		if otherM.PieceName != m.PieceName {
 			continue
 		}
 		needToSpecify = true
 
-		source_r, source_f := IndexToRankFile(m.start)
-		other_r, other_f := IndexToRankFile(otherM.start)
+		source_r, source_f := IndexToRankFile(m.Start)
+		other_r, other_f := IndexToRankFile(otherM.Start)
 
 		if source_f == other_f {
 			canSpecifyFile = false
@@ -97,7 +97,7 @@ func specifyWithOtherPieces(m Move, moves []Move) []byte {
 
 	}
 
-	s := indexToString(m.start)
+	s := indexToString(m.Start)
 	if needToSpecify {
 		if canSpecifyFile {
 			stringBytes = append(stringBytes, s[0])

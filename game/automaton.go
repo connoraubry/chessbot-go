@@ -22,8 +22,8 @@ type Automaton struct {
 	TakeMoveChan chan int
 	QuitChan     chan int
 
-	Cache Cache
-
+	Cache             Cache
+	Book              Book
 	movesAnalyzed     int
 	totalMovesAnalzed int
 
@@ -46,7 +46,7 @@ func NewAutomaton(e *engine.Engine, color engine.Player, recursion int) *Automat
 
 	a.QuitChan = make(chan int)
 	a.Cache = *NewCache(HALFMOVE_CACHE_THRESHOLD, true)
-
+	a.Book = *NewBook("book.json")
 	if recursion == 0 {
 		a.MaxRecursionDepth = RECURSION
 	} else {
@@ -105,12 +105,22 @@ func (a *Automaton) Run() {
 	}
 }
 func (a *Automaton) GetNextMove() engine.Move {
-	fmt.Printf("Getting next move\n. Max analysis: %v\n", a.MaxRecursionDepth)
+	fmt.Printf("Getting next move. Max analysis: %v\n", a.MaxRecursionDepth)
 	a.movesAnalyzed = 0
 
 	MAX := false
 	if a.Color == engine.WHITE {
 		MAX = true
+	}
+
+	if a.Halfmove < 5 {
+		moveStr, err := a.Book.GetNextMove(engine.ExportToFENNoMoves(a.Engine.CurrentGamestate()))
+		if err == nil {
+			validMoves := a.Engine.GetValidMoves()
+			strToMove := a.Engine.GetStringToMoveMap(validMoves)
+			fmt.Println("Using book move")
+			return strToMove[moveStr]
+		}
 	}
 
 	_, nextMove := a.GetNextLevelRecursive(a.MaxRecursionDepth, math.MinInt, math.MaxInt, MAX)
@@ -128,11 +138,24 @@ func (a *Automaton) GetNextLevelRecursive(level, alpha, beta int, MAX bool) (int
 	if level == RECURSION {
 		fmt.Println("Starting recursion")
 	}
-	moves := a.Engine.GetValidMoves()
-
-	if level == 0 || len(moves) == 0 {
+	//base level of recursion, eval and report back
+	if level == 0 {
 		a.movesAnalyzed += 1
 		return a.GetBoardScore(level), engine.Move{}
+	}
+
+	//no moves left, eval and report back
+	moves := a.Engine.GetValidMoves()
+	if len(moves) == 0 {
+		a.movesAnalyzed += 1
+		return a.GetBoardScore(level), engine.Move{}
+	}
+
+	fen := engine.ExportToFENNoMoves(a.Engine.CurrentGamestate())
+	pos, ok := a.Cache.Lookup(fen)
+
+	if ok && pos.DepthAnalyzed > level {
+		return pos.Score, pos.BestMove
 	}
 
 	//randomize moves
@@ -191,9 +214,6 @@ func (a *Automaton) GetNextLevelRecursive(level, alpha, beta int, MAX bool) (int
 		//fmt.Println(bestScore, bestMove)
 	}
 
-	fen := engine.ExportToFENNoMoves(a.Engine.CurrentGamestate())
-	pos, ok := a.Cache.Lookup(fen)
-
 	//if level == RECURSION-1 {
 	//	if bestScore == 1000000 {
 	//		fmt.Println(fen, a.Engine.GetMoveString(bestMove, moves))
@@ -202,20 +222,20 @@ func (a *Automaton) GetNextLevelRecursive(level, alpha, beta int, MAX bool) (int
 
 	if !ok {
 		pos = PositionEval{
-			score:         bestScore,
-			bestMove:      bestMove,
-			lastHalfmove:  a.Halfmove,
-			timesAccessed: 0,
-			depthAnalyzed: level - 1,
+			Score:         bestScore,
+			BestMove:      bestMove,
+			LastHalfmove:  a.Halfmove,
+			TimesAccessed: 0,
+			DepthAnalyzed: level - 1,
 		}
 		a.Cache.Update(fen, pos)
 	} else {
-		if bestScore > pos.score {
-			pos.score = bestScore
-			pos.bestMove = bestMove
-			pos.lastHalfmove = a.Halfmove
-			pos.timesAccessed = pos.timesAccessed + 1
-			pos.depthAnalyzed = level - 1
+		if bestScore > pos.Score {
+			pos.Score = bestScore
+			pos.BestMove = bestMove
+			pos.LastHalfmove = a.Halfmove
+			pos.TimesAccessed = pos.TimesAccessed + 1
+			pos.DepthAnalyzed = level - 1
 			a.Cache.Update(fen, pos)
 		}
 	}
@@ -251,12 +271,12 @@ func (a *Automaton) GetBoardScore(currDepth int) int {
 	fen := engine.ExportToFENNoMoves(gs)
 
 	eval, ok := a.Cache.Lookup(fen)
-	if ok && eval.depthAnalyzed > currDepth {
-		eval.timesAccessed += 1
-		eval.lastHalfmove = a.Halfmove
+	if ok && eval.DepthAnalyzed > currDepth {
+		eval.TimesAccessed += 1
+		eval.LastHalfmove = a.Halfmove
 		a.Cache.Update(fen, eval)
 
-		return eval.score
+		return eval.Score
 	}
 
 	newScore := 0
@@ -278,10 +298,10 @@ func (a *Automaton) GetBoardScore(currDepth int) int {
 	}
 
 	posEval := PositionEval{
-		score:         newScore,
-		timesAccessed: 1,
-		lastHalfmove:  a.Halfmove,
-		depthAnalyzed: currDepth,
+		Score:         newScore,
+		TimesAccessed: 1,
+		LastHalfmove:  a.Halfmove,
+		DepthAnalyzed: currDepth,
 	}
 	a.Cache.Update(fen, posEval)
 
